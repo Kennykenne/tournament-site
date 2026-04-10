@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>ORGANISATION EMOTIONS</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: radial-gradient(circle at top, #1a0033, #000);
+  color: white;
+}
+
+/* 🔥 ХЕДЕР */
+.header {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.header h1 {
+  font-size: 42px;
+  color: #c77dff;
+  text-shadow: 0 0 20px #a855f7;
+}
+
+.header p {
+  color: #aaa;
+}
+
+/* 🔥 КНОПКА */
+.btn {
+  background: #7b2cbf;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  margin-top: 20px;
+  box-shadow: 0 0 15px #a855f7;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background: #9d4edd;
+  box-shadow: 0 0 25px #c77dff;
+}
+
+/* 🔥 СЕКЦИИ */
+.section {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+}
+
+/* 🔥 КАРТОЧКИ */
+.card {
+  background: rgba(20, 0, 40, 0.8);
+  border: 1px solid #7b2cbf;
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 0 20px rgba(123,44,191,0.5);
+}
+
+/* 🔥 ФОРМА */
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: none;
+  background: #1a0033;
+  color: white;
+}
+
+/* 🔥 СТАТУС */
+#status {
+  margin-top: 10px;
+}
+.card {
+  animation: fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+</style>
+</head>
+
+<body>
+
+<!-- 🔥 ХЕДЕР -->
+<div class="header">
+  <h1>𝑶𝑹𝑮𝑨𝑵𝑰𝑺𝑨𝑻𝑰𝑶𝑵 𝑬𝑴𝑶𝑻𝑰𝑶𝑵𝑺</h1>
+  <p>PUBG Tournament | Futuristic Cup</p>
+  <button class="btn" onclick="scrollToForm()">Регистрация</button>
+</div>
+
+<!-- 🔥 ИНФА -->
+<div class="section">
+
+  <div class="card">
+    <h3>📋 Турнир</h3>
+    <p>• Игра: PUBG</p>
+    <p>• Формат: Duo</p>
+    <p>• Максимум команд: 48</p>
+    <p>• Дата: УКАЖИ САМ</p>
+  </div>
+
+  <div class="card">
+    <h3>📜 Правила</h3>
+    <p>• Регламент</p>
+    <p>• Подписки на канал</p>
+  </div>
+
+</div>
+
+<!-- 🔥 ФОРМА -->
+<div class="section" id="form">
+  <div class="card">
+    <h3>Регистрация команды</h3>
+
+    <input id="team" placeholder="Название команды">
+    
+    <input id="nick1" placeholder="Ник игрока 1">
+    <input id="id1" placeholder="ID игрока 1">
+
+    <input id="nick2" placeholder="Ник игрока 2">
+    <input id="id2" placeholder="ID игрока 2">
+
+    <input id="contact" placeholder="Telegram капитана">
+    
+    <button class="btn" onclick="send()">Отправить</button>
+
+    <p id="status"></p>
+    <div style="margin-top:20px;">
+  <div style="background:#222; border-radius:10px; overflow:hidden;">
+    <div id="progress" style="height:10px; width:0%; background:#a855f7;"></div>
+  </div>
+  <p>Заполнено слотов</p>
+</div>
+
+<div style="margin-top:20px;">
+  <h4>Список команд:</h4>
+  <div id="teamList"></div>
+</div>
+  </div>
+</div>
+
+<script>
+ async function loadTeams() {
+  const res = await fetch("/teams");
+  const data = await res.json();
+
+  const list = document.getElementById("teamList");
+  const progress = document.getElementById("progress");
+
+  list.innerHTML = "";
+
+  data.forEach(t => {
+    const div = document.createElement("div");
+    div.innerText = `#${t.slot} — ${t.team}`;
+    list.appendChild(div);
+  });
+
+  const percent = Math.min((data.length / 48) * 100, 100);
+  progress.style.width = percent + "%";
+ }
+
+ async function send() {
+  const team = document.getElementById("team").value.trim();
+
+  const nick1 = document.getElementById("nick1").value.trim();
+  const id1 = document.getElementById("id1").value.trim();
+
+  const nick2 = document.getElementById("nick2").value.trim();
+  const id2 = document.getElementById("id2").value.trim();
+
+  const contact = document.getElementById("contact").value.trim();
+
+  if (!team || !nick1 || !id1 || !nick2 || !id2 || !contact) {
+    document.getElementById("status").innerText = "❗ Заполни все поля";
+    return;
+  }
+
+  const players = `
+ 1. ${nick1} (ID: ${id1})
+ 2. ${nick2} (ID: ${id2})
+ `;
+
+  try {
+    const res = await fetch("/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ team, players, contact })
+    });
+
+    const data = await res.json();
+
+    document.getElementById("status").innerText =
+      data.error
+        ? "❌ " + data.error
+        : data.slot === "RESERVE"
+        ? "⏳ Вы в резерве"
+        : `✅ Ваш слот: ${data.slot}`;
+
+    loadTeams();
+
+  } catch (err) {
+    document.getElementById("status").innerText = "❌ Ошибка соединения";
+  }
+ }
+
+ loadTeams();
+</script>
+
+</body>
+</html>
