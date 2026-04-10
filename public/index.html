@@ -320,7 +320,7 @@ h1, h2, h3 {
 <script>
  document.getElementById("clickSound").play();
  async function loadTeams() {
-  const res = await fetch("/teams");
+  const res = await fetch("https://tournament-site-ih81.onrender.com/teams");
   const data = await res.json();
 
   const list = document.getElementById("teamList");

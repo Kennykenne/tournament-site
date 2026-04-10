@@ -78,6 +78,17 @@ app.post("/register", async (req, res) => {
   res.json({ success: true, slot });
 });
 
+app.get("/teams", async (req, res) => {
+  try {
+    const teams = await Team.find();
+    console.log("📊 TEAMS:", teams);
+    res.json(teams);
+  } catch (err) {
+    console.log("❌ ERROR:", err);
+    res.status(500).send("error");
+  }
+});
+
 app.get("/admin", (req, res) => {
   const password = req.query.password;
 
@@ -113,6 +124,12 @@ app.get("/delete/:id", (req, res) => {
   fs.writeFileSync("teams.json", JSON.stringify(teams, null, 2));
 
   res.send("Удалено");
+});
+
+app.get("/teams", async (req, res) => {
+  const teams = await Team.find();
+  console.log("📊 TEAMS:", teams);
+  res.json(teams);
 });
 
 app.listen(3000, () => {
