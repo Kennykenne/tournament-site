@@ -120,9 +120,31 @@ app.get("/delete/:id", async (req, res) => {
   try {
     const id = req.params.id;
 
+    // удаляем команду
     await Team.findByIdAndDelete(id);
 
-    res.send("Удалено");
+    // берём все команды
+    let teams = await Team.find();
+
+    // сортируем по слоту
+    teams = teams.sort((a, b) => {
+      if (a.slot === "RESERVE") return 1;
+      if (b.slot === "RESERVE") return -1;
+      return a.slot - b.slot;
+    });
+
+    // пересчитываем слоты
+    for (let i = 0; i < teams.length; i++) {
+      if (i < 48) {
+        teams[i].slot = 3 + i;
+      } else {
+        teams[i].slot = "RESERVE";
+      }
+      await teams[i].save();
+    }
+
+    res.send("Удалено и обновлено");
+
   } catch (err) {
     console.log("❌ DELETE ERROR:", err);
     res.status(500).send("error");
