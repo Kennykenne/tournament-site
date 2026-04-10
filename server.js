@@ -4,6 +4,18 @@ const axios = require("axios");
 const cors = require("cors");
 const TOKEN = "8736212653:AAGQVrBHFDKL5FrnlSgq2JCIPo72zGjwgBI";
 const CHAT_ID = "6113649669";
+const mongoose = require("mongoose");
+mongoose.connect("mongodb://kenny:123456123@cluster0-shard-00-00.pak425i.mongodb.net:27017,cluster0-shard-00-01.pak425i.mongodb.net:27017,cluster0-shard-00-02.pak425i.mongodb.net:27017/?ssl=true&replicaSet=atlas-xxxxx-shard-0&authSource=admin&retryWrites=true&w=majority")
+.then(() => console.log("✅ Подключено к MongoDB"))
+.catch(err => console.log("❌ Ошибка:", err));
+const TeamSchema = new mongoose.Schema({
+  team: String,
+  players: String,
+  contact: String,
+  slot: String
+});
+
+const Team = mongoose.model("Team", TeamSchema);
 
 const app = express();
 app.use(express.json());
@@ -25,26 +37,25 @@ app.post("/register", async (req, res) => {
 
   const { team, players, contact } = req.body;
 
-  let slot;
+  const count = await Team.countDocuments();
 
-  if (teams.length < (MAX_SLOTS - START_SLOT + 1)) {
-    slot = START_SLOT + teams.length;
+  let slot;
+  if (count < 48) {
+    slot = 3 + count;
   } else {
     slot = "RESERVE";
   }
 
-  const newTeam = { team, slot };
-  teams.push(newTeam);
+  const newTeam = new Team({ team, players, contact, slot });
+  await newTeam.save();
 
-  fs.writeFileSync("teams.json", JSON.stringify(teams, null, 2));
+  // 🔥 Telegram остаётся
+  try {
+    console.log("Отправка в Telegram...");
 
-  // 🔥 ОТПРАВКА В TELEGRAM
- try {
-  console.log("Отправка в Telegram...");
-
-  await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-    chat_id: CHAT_ID,
-    text: `🔥 НОВАЯ РЕГИСТРАЦИЯ
+    await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+      chat_id: CHAT_ID,
+      text: `🔥 НОВАЯ РЕГИСТРАЦИЯ
 
  🏆 Команда: ${team}
 
@@ -55,15 +66,16 @@ app.post("/register", async (req, res) => {
  ${contact}
 
  🎯 Слот: ${slot}`
-  });
+    });
 
-  console.log("УСПЕШНО отправлено в Telegram");
- } catch (err) {
-  console.log("ОШИБКА TELEGRAM:");
-  console.log(err.response?.data || err.message);
- }
+    console.log("УСПЕШНО отправлено в Telegram");
 
-  res.json({ success: true, slot, teams });
+  } catch (err) {
+    console.log("ОШИБКА TELEGRAM:");
+    console.log(err.response?.data || err.message);
+  }
+
+  res.json({ success: true, slot });
 });
 
 app.get("/admin", (req, res) => {

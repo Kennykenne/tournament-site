@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>ORGANISATION EMOTIONS</title>
 
+
 <style>
 body {
   margin: 0;
@@ -96,6 +97,163 @@ input {
 .btn:active {
   transform: scale(0.95);
 }
+body {
+  background: radial-gradient(circle at top, #12002b, #000);
+  color: white;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.card {
+  background: rgba(20, 0, 40, 0.8);
+  border: 1px solid #7b2cbf;
+  box-shadow: 0 0 20px rgba(123,44,191,0.5);
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 30px #c77dff;
+}
+
+.btn {
+  background: linear-gradient(45deg, #7b2cbf, #c77dff);
+  box-shadow: 0 0 10px #c77dff;
+}
+
+.btn:hover {
+  box-shadow: 0 0 20px #c77dff;
+}
+.card {
+  position: relative;
+  background: rgba(20, 0, 40, 0.8);
+  border-radius: 15px;
+  padding: 20px;
+  overflow: hidden;
+  transition: 0.3s;
+}
+
+/* ✨ АНИМАЦИЯ */
+.card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 0 30px #c77dff;
+}
+
+/* ⚡ ПУЛЬС НЕОНА */
+@keyframes glow {
+  0% { box-shadow: 0 0 5px #7b2cbf; }
+  50% { box-shadow: 0 0 25px #c77dff; }
+  100% { box-shadow: 0 0 5px #7b2cbf; }
+}
+
+.card:hover {
+  animation: glow 1.5s infinite;
+}
+
+/* 🔥 КНОПКИ */
+.btn {
+  background: linear-gradient(45deg, #7b2cbf, #c77dff);
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+/* ✨ ЭФФЕКТ КНОПКИ */
+.btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px #c77dff;
+}
+
+/* ⚡ НАЖАТИЕ */
+.btn:active {
+  transform: scale(0.95);
+}
+
+body {
+  background: radial-gradient(circle at top, #12002b, #000);
+  overflow-x: hidden;
+}
+
+/* 🌌 ДВИЖУЩИЙСЯ ФОН */
+body::before {
+  content: "";
+  position: fixed;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, #7b2cbf22 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: moveBg 20s linear infinite;
+  z-index: -1;
+}
+
+@keyframes moveBg {
+  from { transform: translate(0, 0); }
+  to { transform: translate(-100px, -100px); }
+}
+/* 💨 ДЫМ */
+.smoke {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, #ffffff11, transparent 70%);
+  animation: smokeMove 10s infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes smokeMove {
+  from { transform: translateY(0px); }
+  to { transform: translateY(-50px); }
+}
+
+/* 🔴 ЛИНИИ */
+body::after {
+  content: "";
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 50px,
+    #c77dff22 51px
+  );
+  animation: linesMove 10s linear infinite;
+  z-index: -1;
+}
+
+@keyframes linesMove {
+  from { transform: translateY(0); }
+  to { transform: translateY(50px); }
+}
+
+h1, h2, h3 {
+  color: #c77dff;
+  text-shadow:
+    0 0 5px #7b2cbf,
+    0 0 10px #c77dff,
+    0 0 20px #c77dff;
+  animation: flicker 2s infinite alternate;
+}
+
+@keyframes flicker {
+  from { opacity: 0.8; }
+  to { opacity: 1; }
+}
+
+@keyframes successPop {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.success {
+  animation: successPop 0.5s ease;
+  color: #00ff88;
+  text-shadow: 0 0 10px #00ff88;
+}
+
 </style>
 </head>
 
@@ -105,7 +263,7 @@ input {
 <div class="header">
   <h1>𝑶𝑹𝑮𝑨𝑵𝑰𝑺𝑨𝑻𝑰𝑶𝑵 𝑬𝑴𝑶𝑻𝑰𝑶𝑵𝑺</h1>
   <p>PUBG Tournament | Futuristic Cup</p>
-  <button class="btn" onclick="scrollToForm()">Регистрация</button>
+  <h2 id="timer"></h2>
 </div>
 
 <!-- 🔥 ИНФА -->
@@ -160,6 +318,7 @@ input {
 </div>
 
 <script>
+ document.getElementById("clickSound").play();
  async function loadTeams() {
   const res = await fetch("/teams");
   const data = await res.json();
@@ -211,13 +370,11 @@ input {
 
     const data = await res.json();
 
-    document.getElementById("status").innerText =
-      data.error
-        ? "❌ " + data.error
-        : data.slot === "RESERVE"
-        ? "⏳ Вы в резерве"
-        : `✅ Ваш слот: ${data.slot}`;
-
+     document.getElementById("status").className = "success";
+     document.getElementById("status").innerText =
+     data.slot === "RESERVE"
+      ? "⏳ Вы в резерве"
+       : `✅ Ваш слот: ${data.slot}`;
     loadTeams();
 
   } catch (err) {
@@ -226,7 +383,30 @@ input {
  }
 
  loadTeams();
+ const targetDate = new Date("2026-05-01T18:00:00");
+
+ function updateTimer() {
+  const now = new Date();
+  const diff = targetDate - now;
+
+  if (diff <= 0) {
+    document.getElementById("timer").innerText = "🔥 Турнир начался!";
+    return;
+  }
+
+  const hours = Math.floor(diff / 1000 / 60 / 60);
+  const minutes = Math.floor((diff / 1000 / 60) % 60);
+  const seconds = Math.floor((diff / 1000) % 60);
+
+  document.getElementById("timer").innerText =
+    `⏳ До старта: ${hours}ч ${minutes}м ${seconds}с`;
+ }
+
+ setInterval(updateTimer, 1000);
+ updateTimer();
 </script>
 
+<div class="smoke"></div>
+<audio id="clickSound" src="https://www.myinstants.com/media/sounds/mouse-click.mp3"></audio>
 </body>
 </html>
