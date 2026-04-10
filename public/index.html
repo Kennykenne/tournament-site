@@ -4,179 +4,16 @@
 <meta charset="UTF-8">
 <title>ORGANISATION EMOTIONS</title>
 
-
 <style>
 body {
   margin: 0;
   font-family: Arial;
-  background: radial-gradient(circle at top, #1a0033, #000);
-  color: white;
-}
-
-/* 🔥 ХЕДЕР */
-.header {
-  text-align: center;
-  padding: 80px 20px;
-}
-
-.header h1 {
-  font-size: 42px;
-  color: #c77dff;
-  text-shadow: 0 0 20px #a855f7;
-}
-
-.header p {
-  color: #aaa;
-}
-
-/* 🔥 КНОПКА */
-.btn {
-  background: #7b2cbf;
-  border: none;
-  padding: 15px 30px;
-  border-radius: 10px;
-  color: white;
-  cursor: pointer;
-  margin-top: 20px;
-  box-shadow: 0 0 15px #a855f7;
-  transition: 0.3s;
-}
-
-.btn:hover {
-  background: #9d4edd;
-  box-shadow: 0 0 25px #c77dff;
-}
-
-/* 🔥 СЕКЦИИ */
-.section {
-  max-width: 900px;
-  margin: auto;
-  padding: 20px;
-}
-
-/* 🔥 КАРТОЧКИ */
-.card {
-  background: rgba(20, 0, 40, 0.8);
-  border: 1px solid #7b2cbf;
-  border-radius: 15px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 0 20px rgba(123,44,191,0.5);
-}
-
-/* 🔥 ФОРМА */
-input {
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0;
-  border-radius: 8px;
-  border: none;
-  background: #1a0033;
-  color: white;
-}
-
-/* 🔥 СТАТУС */
-#status {
-  margin-top: 10px;
-}
-.card {
-  animation: fadeIn 0.6s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.btn:active {
-  transform: scale(0.95);
-}
-body {
   background: radial-gradient(circle at top, #12002b, #000);
   color: white;
-  font-family: 'Segoe UI', sans-serif;
-}
-
-.card {
-  background: rgba(20, 0, 40, 0.8);
-  border: 1px solid #7b2cbf;
-  box-shadow: 0 0 20px rgba(123,44,191,0.5);
-  transition: 0.3s;
-}
-
-.card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 30px #c77dff;
-}
-
-.btn {
-  background: linear-gradient(45deg, #7b2cbf, #c77dff);
-  box-shadow: 0 0 10px #c77dff;
-}
-
-.btn:hover {
-  box-shadow: 0 0 20px #c77dff;
-}
-.card {
-  position: relative;
-  background: rgba(20, 0, 40, 0.8);
-  border-radius: 15px;
-  padding: 20px;
-  overflow: hidden;
-  transition: 0.3s;
-}
-
-/* ✨ АНИМАЦИЯ */
-.card:hover {
-  transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 0 30px #c77dff;
-}
-
-/* ⚡ ПУЛЬС НЕОНА */
-@keyframes glow {
-  0% { box-shadow: 0 0 5px #7b2cbf; }
-  50% { box-shadow: 0 0 25px #c77dff; }
-  100% { box-shadow: 0 0 5px #7b2cbf; }
-}
-
-.card:hover {
-  animation: glow 1.5s infinite;
-}
-
-/* 🔥 КНОПКИ */
-.btn {
-  background: linear-gradient(45deg, #7b2cbf, #c77dff);
-  border: none;
-  padding: 12px 20px;
-  border-radius: 10px;
-  color: white;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-/* ✨ ЭФФЕКТ КНОПКИ */
-.btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 20px #c77dff;
-}
-
-/* ⚡ НАЖАТИЕ */
-.btn:active {
-  transform: scale(0.95);
-}
-
-body {
-  background: radial-gradient(circle at top, #12002b, #000);
   overflow-x: hidden;
 }
 
-/* 🌌 ДВИЖУЩИЙСЯ ФОН */
+/* ФОН */
 body::before {
   content: "";
   position: fixed;
@@ -192,133 +29,157 @@ body::before {
   from { transform: translate(0, 0); }
   to { transform: translate(-100px, -100px); }
 }
-/* 💨 ДЫМ */
-.smoke {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, #ffffff11, transparent 70%);
-  animation: smokeMove 10s infinite alternate;
-  pointer-events: none;
-  z-index: 0;
+
+/* ХЕДЕР */
+.header {
+  text-align: center;
+  padding: 80px 20px;
 }
 
-@keyframes smokeMove {
-  from { transform: translateY(0px); }
-  to { transform: translateY(-50px); }
-}
-
-/* 🔴 ЛИНИИ */
-body::after {
-  content: "";
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 50px,
-    #c77dff22 51px
-  );
-  animation: linesMove 10s linear infinite;
-  z-index: -1;
-}
-
-@keyframes linesMove {
-  from { transform: translateY(0); }
-  to { transform: translateY(50px); }
-}
-
-h1, h2, h3 {
+.header h1 {
+  font-size: 42px;
   color: #c77dff;
-  text-shadow:
-    0 0 5px #7b2cbf,
-    0 0 10px #c77dff,
-    0 0 20px #c77dff;
-  animation: flicker 2s infinite alternate;
+  text-shadow: 0 0 20px #a855f7;
 }
 
-@keyframes flicker {
-  from { opacity: 0.8; }
-  to { opacity: 1; }
+.header p {
+  color: #aaa;
 }
 
-@keyframes successPop {
-  0% { transform: scale(0.8); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+/* КНОПКИ */
+.btn {
+  background: linear-gradient(45deg, #7b2cbf, #c77dff);
+  border: none;
+  padding: 15px 30px;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  margin: 10px;
+  box-shadow: 0 0 15px #a855f7;
+  transition: 0.3s;
 }
 
-.success {
-  animation: successPop 0.5s ease;
+.btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px #c77dff;
+}
+
+/* СЕКЦИИ */
+.section {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+}
+
+/* КАРТОЧКИ */
+.card {
+  background: rgba(20, 0, 40, 0.8);
+  border: 1px solid #7b2cbf;
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 0 20px rgba(123,44,191,0.5);
+  transition: 0.3s;
+  animation: fadeIn 0.6s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 30px #c77dff;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px);}
+  to { opacity: 1; transform: translateY(0);}
+}
+
+/* INPUT */
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: none;
+  background: #1a0033;
+  color: white;
+}
+
+/* СТАТУС */
+#status {
+  margin-top: 10px;
+  font-weight: bold;
   color: #00ff88;
-  text-shadow: 0 0 10px #00ff88;
 }
 
+/* ПРОГРЕСС */
+#progress {
+  height: 10px;
+  width: 0%;
+  background: #a855f7;
+}
 </style>
 </head>
 
 <body>
 
-<!-- 🔥 ХЕДЕР -->
 <div class="header">
   <h1>𝑶𝑹𝑮𝑨𝑵𝑰𝑺𝑨𝑻𝑰𝑶𝑵 𝑬𝑴𝑶𝑻𝑰𝑶𝑵𝑺</h1>
   <p>PUBG Tournament | Futuristic Cup</p>
   <h2 id="timer"></h2>
 </div>
 
-<!-- 🔥 ИНФА -->
-<div class="section">
-
-  <div class="card">
-    <h3>📋 Турнир</h3>
-    <p>• Игра: PUBG</p>
-    <p>• Формат: Duo</p>
-    <p>• Максимум команд: 48</p>
-    <p>• Дата: УКАЖИ САМ</p>
-  </div>
-
-  <div class="card">
-    <h3>📜 Правила</h3>
-    <p>• Регламент</p>
-    <p>• Подписки на канал</p>
-  </div>
-
+<!-- ВКЛАДКИ -->
+<div style="text-align:center;">
+  <button class="btn" onclick="showTab('form')">📝 Регистрация</button>
+  <button class="btn" onclick="showTab('teams')">📋 Список команд</button>
 </div>
 
-<!-- 🔥 ФОРМА -->
-<div class="section" id="form">
+<!-- ФОРМА -->
+<div class="section" id="formTab">
   <div class="card">
     <h3>Регистрация команды</h3>
 
     <input id="team" placeholder="Название команды">
-    
     <input id="nick1" placeholder="Ник игрока 1">
     <input id="id1" placeholder="ID игрока 1">
-
     <input id="nick2" placeholder="Ник игрока 2">
     <input id="id2" placeholder="ID игрока 2">
-
     <input id="contact" placeholder="Telegram капитана">
-    
+
     <button class="btn" onclick="send()">Отправить</button>
 
     <p id="status"></p>
+
     <div style="margin-top:20px;">
-  <div style="background:#222; border-radius:10px; overflow:hidden;">
-    <div id="progress" style="height:10px; width:0%; background:#a855f7;"></div>
+      <div style="background:#222; border-radius:10px; overflow:hidden;">
+        <div id="progress"></div>
+      </div>
+      <p>Заполнено слотов</p>
+    </div>
   </div>
-  <p>Заполнено слотов</p>
 </div>
 
-<div style="margin-top:20px;">
-  <h4>Список команд:</h4>
-  <div id="teamList"></div>
-</div>
+<!-- СПИСОК -->
+<div class="section" id="teamsTab" style="display:none;">
+  <div class="card">
+    <h3>📋 Список команд</h3>
+    <div id="teamList"></div>
   </div>
 </div>
 
 <script>
- document.getElementById("clickSound").play();
+function showTab(tab) {
+  document.getElementById("formTab").style.display = "none";
+  document.getElementById("teamsTab").style.display = "none";
+
+  if (tab === "form") {
+    document.getElementById("formTab").style.display = "block";
+   } else {
+    document.getElementById("teamsTab").style.display = "block";
+    loadTeams();
+   }
+ }
+
  async function loadTeams() {
   const res = await fetch("https://tournament-site-ih81.onrender.com/teams");
   const data = await res.json();
@@ -340,13 +201,10 @@ h1, h2, h3 {
 
  async function send() {
   const team = document.getElementById("team").value.trim();
-
   const nick1 = document.getElementById("nick1").value.trim();
   const id1 = document.getElementById("id1").value.trim();
-
   const nick2 = document.getElementById("nick2").value.trim();
   const id2 = document.getElementById("id2").value.trim();
-
   const contact = document.getElementById("contact").value.trim();
 
   if (!team || !nick1 || !id1 || !nick2 || !id2 || !contact) {
@@ -360,7 +218,7 @@ h1, h2, h3 {
  `;
 
   try {
-    const res = await fetch("/register", {
+    const res = await fetch("https://tournament-site-ih81.onrender.com/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -370,19 +228,17 @@ h1, h2, h3 {
 
     const data = await res.json();
 
-     document.getElementById("status").className = "success";
-     document.getElementById("status").innerText =
-     data.slot === "RESERVE"
-      ? "⏳ Вы в резерве"
-       : `✅ Ваш слот: ${data.slot}`;
-    loadTeams();
+    document.getElementById("status").innerText =
+      data.slot === "RESERVE"
+        ? "⏳ Вы в резерве"
+        : `✅ Ваш слот: ${data.slot}`;
 
-  } catch (err) {
+    loadTeams();
+   } catch (err) {
     document.getElementById("status").innerText = "❌ Ошибка соединения";
-  }
+   }
  }
 
- loadTeams();
  const targetDate = new Date("2026-05-01T18:00:00");
 
  function updateTimer() {
@@ -404,9 +260,8 @@ h1, h2, h3 {
 
  setInterval(updateTimer, 1000);
  updateTimer();
+ loadTeams();
 </script>
 
-<div class="smoke"></div>
-<audio id="clickSound" src="https://www.myinstants.com/media/sounds/mouse-click.mp3"></audio>
 </body>
 </html>
