@@ -71,28 +71,30 @@
  }
 
  async function loadTeams() {
-  const res = await fetch("https://tournament-site-ih81.onrender.com/api/admin-login");
+  const res = await fetch("https://tournament-site-ih81.onrender.com/teams");
   const data = await res.json();
+
+  console.log("DATA:", data);
 
   const list = document.getElementById("list");
   list.innerHTML = "";
 
   data.forEach((t, i) => {
     const div = document.createElement("div");
-    div.className = "card";
+    div.style.border = "1px solid white";
+    div.style.margin = "10px";
+    div.style.padding = "10px";
+
     div.innerHTML = `
-      <b>${t.team}</b> (#${t.slot})<br>
-      ${t.players}<br>
-      ${t.contact}<br>
-      <button onclick="deleteTeam(${i})">❌ Удалить</button>
+      <div>🏆 ${t.team || "нет имени"}</div>
+      <div>👥 ${t.players || "нет игроков"}</div>
+      <div>📩 ${t.contact || "нет контакта"}</div>
+      <div>🎯 ${t.slot || "нет слота"}</div>
+      <button onclick="deleteTeam(${i})">Удалить</button>
     `;
+
     list.appendChild(div);
   });
- }
-
- async function deleteTeam(i) {
-  await fetch("https://tournament-site-ih81.onrender.com/delete/" + i);
-  loadTeams();
 }
 </script>
 
