@@ -116,14 +116,17 @@ app.get("/admin", (req, res) => {
   `);
 });
 
-app.get("/delete/:id", (req, res) => {
-  const id = req.params.id;
+app.get("/delete/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
 
-  teams.splice(id, 1);
+    await Team.findByIdAndDelete(id);
 
-  fs.writeFileSync("teams.json", JSON.stringify(teams, null, 2));
-
-  res.send("Удалено");
+    res.send("Удалено");
+  } catch (err) {
+    console.log("❌ DELETE ERROR:", err);
+    res.status(500).send("error");
+  }
 });
 
 app.get("/teams", async (req, res) => {
@@ -141,6 +144,19 @@ app.post("/api/admin-login", (req, res) => {
     res.json({ success: true });
   } else {
     res.json({ success: false });
+  }
+});
+
+app.delete("/delete/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    await Team.findByIdAndDelete(id);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.log("❌ DELETE ERROR:", err);
+    res.status(500).json({ error: "error" });
   }
 });
 
