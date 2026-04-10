@@ -8,19 +8,19 @@
       color: white;
       font-family: sans-serif;
       text-align: center;
-    }
+     }
 
-    input, button {
+     input, button {
       padding: 10px;
       margin: 10px;
       border-radius: 5px;
-    }
+     }
 
-    .card {
+     .card {
       border: 1px solid #c77dff;
       margin: 10px;
       padding: 10px;
-    }
+     }
   </style>
 </head>
 <body>
@@ -39,34 +39,24 @@
 
 <script>
  async function login() {
-  try {
-    const password = document.getElementById("pass").value;
+  const password = document.getElementById("pass").value;
 
-    const res = await fetch("https://tournament-site-ih81.onrender.com/api/admin-login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ password })
-    });
+  const res = await fetch("https://tournament-site-ih81.onrender.com/api/admin-login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ password })
+  });
 
-    const text = await res.text(); // 👈 важно
+  const data = await res.json();
 
-    console.log("Ответ сервера:", text);
-
-    const data = JSON.parse(text); // 👈 вручную парсим
-
-    if (data.success) {
-      document.getElementById("login").style.display = "none";
-      document.getElementById("panel").style.display = "block";
-      loadTeams();
-    } else {
-      alert("❌ Неверный пароль");
-    }
-
-  } catch (err) {
-    console.log("❌ ERROR:", err);
-    alert("Ошибка соединения");
+  if (data.success) {
+    document.getElementById("login").style.display = "none";
+    document.getElementById("panel").style.display = "block";
+    loadTeams();
+  } else {
+    alert("❌ Неверный пароль");
   }
  }
 
@@ -74,28 +64,25 @@
   const res = await fetch("https://tournament-site-ih81.onrender.com/teams");
   const data = await res.json();
 
-  console.log("DATA:", data);
-
   const list = document.getElementById("list");
   list.innerHTML = "";
 
-  data.forEach((t, i) => {
+  data.forEach((t) => {
     const div = document.createElement("div");
-    div.style.border = "1px solid white";
-    div.style.margin = "10px";
-    div.style.padding = "10px";
+    div.className = "card";
 
     div.innerHTML = `
-      <div>🏆 ${t.team || "нет имени"}</div>
-      <div>👥 ${t.players || "нет игроков"}</div>
-      <div>📩 ${t.contact || "нет контакта"}</div>
-      <div>🎯 ${t.slot || "нет слота"}</div>
-      <button onclick="deleteTeam('${t._id}')">Удалить</button>
+      <div>🏆 ${t.team}</div>
+      <div>👥 ${t.players}</div>
+      <div>📩 ${t.contact}</div>
+      <div>🎯 ${t.slot}</div>
+      <button onclick="deleteTeam('${t._id}')">❌ Удалить</button>
     `;
 
     list.appendChild(div);
   });
  }
+
  async function deleteTeam(id) {
   await fetch("https://tournament-site-ih81.onrender.com/delete/" + id);
   loadTeams();
