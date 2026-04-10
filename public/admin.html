@@ -90,12 +90,16 @@
       <div>👥 ${t.players || "нет игроков"}</div>
       <div>📩 ${t.contact || "нет контакта"}</div>
       <div>🎯 ${t.slot || "нет слота"}</div>
-      <button onclick="deleteTeam(${i})">Удалить</button>
+      <button onclick="deleteTeam('${t._id}')">Удалить</button>
     `;
 
     list.appendChild(div);
   });
-}
+ }
+ async function deleteTeam(id) {
+  await fetch("https://tournament-site-ih81.onrender.com/delete/" + id);
+  loadTeams();
+ }
 </script>
 
 </body>
