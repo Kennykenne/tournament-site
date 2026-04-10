@@ -134,7 +134,7 @@ app.get("/teams", async (req, res) => {
 
 const ADMIN_PASSWORD = "2110";
 
-app.posapp.post("/api/admin-login", (req, res) => {
+app.post("/api/admin-login", (req, res) => {
   const { password } = req.body;
 
   if (password === "1234") {
