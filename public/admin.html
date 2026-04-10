@@ -38,27 +38,39 @@
 </div>
 
 <script>
-async function login() {
-  const password = document.getElementById("pass").value;
+ async function login() {
+  try {
+    const password = document.getElementById("pass").value;
 
-  const res = await fetch("https://tournament-site-ih81.onrender.com/admin-login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ password })
-  });
+    const res = await fetch("https://tournament-site-ih81.onrender.com/admin-login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ password })
+    });
 
-  const data = await res.json();
+    const text = await res.text(); // 👈 важно
 
-  if (data.success) {
-    document.getElementById("login").style.display = "none";
-    document.getElementById("panel").style.display = "block";
-    loadTeams();
-  } else {
-    alert("❌ Неверный пароль");
+    console.log("Ответ сервера:", text);
+
+    const data = JSON.parse(text); // 👈 вручную парсим
+
+    if (data.success) {
+      document.getElementById("login").style.display = "none";
+      document.getElementById("panel").style.display = "block";
+      loadTeams();
+    } else {
+      alert("❌ Неверный пароль");
+    }
+
+  } catch (err) {
+    console.log("❌ ERROR:", err);
+    alert("Ошибка соединения");
   }
-}
+ }
 
-async function loadTeams() {
+ async function loadTeams() {
   const res = await fetch("https://tournament-site-ih81.onrender.com/teams");
   const data = await res.json();
 
@@ -76,10 +88,10 @@ async function loadTeams() {
     `;
     list.appendChild(div);
   });
-}
+ }
 
-async function deleteTeam(i) {
-  await fetch("/delete/" + i);
+ async function deleteTeam(i) {
+  await fetch("https://tournament-site-ih81.onrender.com/delete/" + i);
   loadTeams();
 }
 </script>
