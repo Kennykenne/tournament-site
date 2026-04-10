@@ -132,6 +132,18 @@ app.get("/teams", async (req, res) => {
   res.json(teams);
 });
 
+const ADMIN_PASSWORD = "2110";
+
+app.posapp.post("/api/admin-login", (req, res) => {
+  const { password } = req.body;
+
+  if (password === "1234") {
+    res.json({ success: true });
+  } else {
+    res.json({ success: false });
+  }
+});
+
 app.listen(3000, () => {
   console.log("Сервер запущен http://localhost:3000");
 });
