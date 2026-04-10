@@ -41,7 +41,7 @@
 async function login() {
   const password = document.getElementById("pass").value;
 
-  const res = await fetch("/admin-login", {
+  const res = await fetch("https://tournament-site-ih81.onrender.com/admin-login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ password })
@@ -59,7 +59,7 @@ async function login() {
 }
 
 async function loadTeams() {
-  const res = await fetch("/teams");
+  const res = await fetch("https://tournament-site-ih81.onrender.com/teams");
   const data = await res.json();
 
   const list = document.getElementById("list");
