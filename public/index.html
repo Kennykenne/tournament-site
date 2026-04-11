@@ -173,7 +173,7 @@ async function loadAdmin() {
       <div style="border:1px solid #555; padding:10px; margin:10px;">
         <b>${t.name}</b><br>
         <button onclick="openTournament('${t._id}')">Открыть</button>
-        <button onclick="deleteTournament('${t._id}')">❌</button>
+        <button onclick="deleteTournament('${t._id}')">❌ Удалить</button>
       </div>
     `;
   });
@@ -201,6 +201,7 @@ async function createTournament() {
     body: JSON.stringify({ name, description, mode, image, maxSlots })
   });
 
+  alert("✅ Турнир создан");
   loadTournaments();
   loadAdmin();
 }
@@ -208,10 +209,25 @@ async function createTournament() {
 async function deleteTournament(id) {
   if (!confirm("Удалить турнир?")) return;
 
-  await fetch("/delete-tournament/" + id, { method: "DELETE" });
+  try {
+    const res = await fetch("/delete-tournament/" + id, {
+      method: "DELETE"
+    });
 
-  loadTournaments();
-  loadAdmin();
+    const data = await res.json();
+
+    if (data.success) {
+      alert("✅ Турнир удалён");
+      loadTournaments();
+      loadAdmin();
+    } else {
+      alert("❌ Не удалось удалить");
+    }
+
+  } catch (err) {
+    console.log(err);
+    alert("Ошибка удаления");
+  }
 }
 
 /* авто вход */
