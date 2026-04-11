@@ -126,18 +126,31 @@ async function login() {
   const res = await fetch("/api/admin-login", {
     method: "POST",
     headers: {"Content-Type":"application/json"},
+    credentials: "include",
     body: JSON.stringify({ password })
   });
 
   const data = await res.json();
 
   if (data.success) {
-    localStorage.setItem("admin", "true");
     document.getElementById("loginModal").style.display = "none";
     document.getElementById("adminPanel").style.display = "block";
     loadAdmin();
   } else {
     alert("❌ Неверный пароль");
+  }
+}
+
+async function checkAdmin() {
+  const res = await fetch("/api/check-admin", {
+    credentials: "include"
+  });
+
+  const data = await res.json();
+
+  if (data.admin) {
+    document.getElementById("adminPanel").style.display = "block";
+    loadAdmin();
   }
 }
 
@@ -198,10 +211,10 @@ async function createTournament() {
   await fetch("/create-tournament", {
     method: "POST",
     headers: {"Content-Type":"application/json"},
+    credentials: "include",
     body: JSON.stringify({ name, description, mode, image, maxSlots })
   });
 
-  alert("✅ Турнир создан");
   loadTournaments();
   loadAdmin();
 }
@@ -209,33 +222,22 @@ async function createTournament() {
 async function deleteTournament(id) {
   if (!confirm("Удалить турнир?")) return;
 
-  try {
-    const res = await fetch("/delete-tournament/" + id, {
-      method: "DELETE"
-    });
+  const res = await fetch("/delete-tournament/" + id, {
+    method: "DELETE",
+    credentials: "include"
+  });
 
-    const data = await res.json();
+  const data = await res.json();
 
-    if (data.success) {
-      alert("✅ Турнир удалён");
-      loadTournaments();
-      loadAdmin();
-    } else {
-      alert("❌ Не удалось удалить");
-    }
-
-  } catch (err) {
-    console.log(err);
-    alert("Ошибка удаления");
+  if (data.success) {
+    loadTournaments();
+    loadAdmin();
+  } else {
+    alert("Ошибка");
   }
 }
 
-/* авто вход */
-if (localStorage.getItem("admin") === "true") {
-  document.getElementById("adminPanel").style.display = "block";
-  loadAdmin();
-}
-
+checkAdmin();
 loadTournaments();
 </script>
 

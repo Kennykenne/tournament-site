@@ -2,21 +2,36 @@ const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const session = require("express-session");
 
-const TOKEN = "8736212653:AAGQVrBHFDKL5FrnlSgq2JCIPo72zGjwgBI";
-const CHAT_ID = "6113649669";
+const TOKEN = "ТВОЙ_ТОКЕН";
+const CHAT_ID = "ТВОЙ_CHAT_ID";
 
 mongoose.connect("mongodb+srv://kenny:123456123@cluster0.pak425i.mongodb.net/tournament?retryWrites=true&w=majority")
 .then(() => console.log("✅ MongoDB подключена"))
 .catch(err => console.log("❌ MongoDB ошибка:", err));
 
 const app = express();
+
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
+
+app.use(session({
+  secret: "supersecretkey",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: false,
+    maxAge: 1000 * 60 * 60 * 24 // 1 день
+  }
+}));
+
 app.use(express.static("public"));
 
 const ADMIN_PASSWORD = "1234";
-let adminLoggedIn = false;
 
 /* =========================
    🏆 ТУРНИР
@@ -44,16 +59,35 @@ const Team = mongoose.model("Team", {
    🔐 ПРОВЕРКА АДМИНА
 ========================= */
 function checkAdmin(req, res, next) {
-  if (!adminLoggedIn) {
-    return res.status(403).send("Forbidden");
+  if (!req.session.admin) {
+    return res.status(403).json({ error: "Forbidden" });
   }
   next();
 }
 
 /* =========================
+   🔐 LOGIN
+========================= */
+app.post("/api/admin-login", (req, res) => {
+  if (req.body.password === ADMIN_PASSWORD) {
+    req.session.admin = true;
+    res.json({ success: true });
+  } else {
+    res.json({ success: false });
+  }
+});
+
+/* =========================
+   🔐 ПРОВЕРКА СЕССИИ
+========================= */
+app.get("/api/check-admin", (req, res) => {
+  res.json({ admin: !!req.session.admin });
+});
+
+/* =========================
    ➕ СОЗДАТЬ ТУРНИР
 ========================= */
-app.post("/create-tournament", async (req, res) => {
+app.post("/create-tournament", checkAdmin, async (req, res) => {
   const { name, description, image, mode, maxSlots } = req.body;
 
   if (!name || !description || !image || !mode || !maxSlots) {
@@ -74,7 +108,7 @@ app.post("/create-tournament", async (req, res) => {
 /* =========================
    ❌ УДАЛИТЬ ТУРНИР
 ========================= */
-app.delete("/delete-tournament/:id", async (req, res) => {
+app.delete("/delete-tournament/:id", checkAdmin, async (req, res) => {
   const id = req.params.id;
 
   await Tournament.findByIdAndDelete(id);
@@ -84,7 +118,7 @@ app.delete("/delete-tournament/:id", async (req, res) => {
 });
 
 /* =========================
-   📋 ВСЕ ТУРНИРЫ
+   📋 ТУРНИРЫ
 ========================= */
 app.get("/tournaments", async (req, res) => {
   const data = await Tournament.find().sort({ _id: -1 });
@@ -139,18 +173,10 @@ app.post("/register", async (req, res) => {
 });
 
 /* =========================
-   📋 КОМАНДЫ ПО ТУРНИРУ
+   📋 КОМАНДЫ
 ========================= */
 app.get("/teams/:id", async (req, res) => {
   const teams = await Team.find({ tournamentId: req.params.id }).sort({ slot: 1 });
-  res.json(teams);
-});
-
-/* =========================
-   📋 ВСЕ КОМАНДЫ (АДМИН)
-========================= */
-app.get("/admin/teams/:id", checkAdmin, async (req, res) => {
-  const teams = await Team.find({ tournamentId: req.params.id });
   res.json(teams);
 });
 
@@ -179,18 +205,6 @@ app.delete("/delete/:id", checkAdmin, async (req, res) => {
   }
 
   res.json({ success: true });
-});
-
-/* =========================
-   🔐 АДМИН ЛОГИН
-========================= */
-app.post("/api/admin-login", (req, res) => {
-  if (req.body.password === ADMIN_PASSWORD) {
-    adminLoggedIn = true;
-    res.json({ success: true });
-  } else {
-    res.json({ success: false });
-  }
 });
 
 app.listen(3000, () => {
