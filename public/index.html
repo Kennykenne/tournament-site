@@ -106,7 +106,36 @@ function openTournament(id) {
 }
 
 loadTournaments();
-</script>
 
+async function createTournament() {
+  const name = document.getElementById("t_name").value;
+  const description = document.getElementById("t_desc").value;
+  const mode = document.getElementById("t_mode").value;
+  const maxSlots = document.getElementById("t_slots").value;
+
+  await fetch("https://tournament-site-ih81.onrender.com/create-tournament", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ name, description, mode, maxSlots })
+  });
+
+  alert("Турнир создан");
+  loadTournaments();
+}
+</script>
+<div class="section">
+  <div class="card">
+    <h3>⚙️ Добавить турнир (только ты)</h3>
+
+    <input id="t_name" placeholder="Название турнира">
+    <input id="t_desc" placeholder="Описание">
+    <input id="t_mode" placeholder="Режим (DUO / TDM)">
+    <input id="t_slots" placeholder="Слотов (например 48)">
+
+    <button class="btn" onclick="createTournament()">Создать</button>
+  </div>
+</div>
 </body>
 </html>
