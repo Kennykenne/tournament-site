@@ -13,7 +13,6 @@ body {
   color: white;
 }
 
-/* 🔥 БАННЕР */
 .banner {
   text-align: center;
   padding: 80px 20px;
@@ -22,55 +21,30 @@ body {
 .banner h1 {
   font-size: 40px;
   color: #c77dff;
-  text-shadow: 0 0 20px #a855f7;
 }
 
-.banner p {
-  color: #aaa;
-  margin-top: 10px;
-}
-
-/* 🔥 КНОПКИ */
 .btn {
   background: linear-gradient(45deg, #7b2cbf, #c77dff);
-  padding: 12px 20px;
+  padding: 10px;
   border-radius: 10px;
   color: white;
   cursor: pointer;
-  margin: 10px;
   border: none;
+  margin: 5px;
 }
 
-/* 🔥 СЕКЦИЯ */
-.section {
-  max-width: 900px;
-  margin: auto;
-  padding: 20px;
-}
-
-/* 🔥 КАРТОЧКИ */
 .card {
   background: rgba(20,0,40,0.8);
-  border: 1px solid #7b2cbf;
   border-radius: 15px;
   padding: 20px;
   margin: 15px;
-  text-align: center;
-  transition: 0.3s;
 }
 
-.card:hover {
-  transform: scale(1.03);
-  box-shadow: 0 0 20px #c77dff;
+.section {
+  max-width: 900px;
+  margin: auto;
 }
 
-/* 🔥 ВКЛАДКИ */
-.tabs {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-/* 🔥 АДМИНКА */
 #adminPanel {
   position: fixed;
   right: -320px;
@@ -87,49 +61,38 @@ body {
 
 <body>
 
-<!-- 🔐 кнопки -->
+<!-- кнопки -->
 <div style="position:fixed; top:10px; right:10px;">
   <button class="btn" onclick="openLogin()">🔐</button>
   <button class="btn" onclick="toggleAdmin()">⚙️</button>
 </div>
 
-<!-- 🔥 БАННЕР -->
+<!-- баннер -->
 <div class="banner">
   <h1>ORGANISATION EMOTIONS</h1>
   <p>Киберспортивные турниры по PUBG</p>
 
-  <button class="btn" onclick="showTab('tournaments')">
-    🎮 Смотреть турниры
-  </button>
-
-  <button class="btn" onclick="window.open('https://t.me/YOUR_CHANNEL')">
-    📩 Наш Telegram
-  </button>
+  <button class="btn" onclick="showTab('tournaments')">🎮 Турниры</button>
 </div>
 
-<!-- 🔥 ВКЛАДКИ -->
-<div class="tabs">
+<!-- вкладки -->
+<div style="text-align:center;">
   <button onclick="showTab('home')">🏠 Главная</button>
   <button onclick="showTab('tournaments')">🎮 Турниры</button>
 </div>
 
-<!-- 🏠 ГЛАВНАЯ -->
 <div id="homeTab" class="section">
   <div class="card">
     <h2>О нас</h2>
-    <p>
-      Мы проводим турниры по PUBG с призами и рейтингом.
-      Участвуй и стань лучшим!
-    </p>
+    <p>Мы проводим турниры по PUBG с призами</p>
   </div>
 </div>
 
-<!-- 🎮 ТУРНИРЫ -->
 <div id="tournamentsTab" class="section" style="display:none;">
   <div id="tournaments"></div>
 </div>
 
-<!-- 🔐 LOGIN -->
+<!-- login -->
 <div id="loginModal" style="display:none; position:fixed; width:100%; height:100%; background:#000a;">
   <div style="background:#111; padding:20px; max-width:300px; margin:100px auto;">
     <input id="adminPass">
@@ -137,26 +100,30 @@ body {
   </div>
 </div>
 
-<!-- ⚙️ АДМИНКА -->
+<!-- админ -->
 <div id="adminPanel">
-  <h3>⚙️ Админка</h3>
 
-  <input id="t_name" placeholder="Название">
-  <input id="t_desc" placeholder="Описание">
-  <input id="t_mode" placeholder="Режим">
-  <input id="t_slots" placeholder="Слоты">
+<h3>Админка</h3>
 
-  <input type="file" id="imageFile">
+<input id="t_name" placeholder="Название">
+<input id="t_desc" placeholder="Описание">
+<input id="t_mode" placeholder="Режим">
+<input id="t_slots" placeholder="Слоты">
 
-  <button onclick="createTournament()">Создать</button>
+<input type="file" id="imageFile">
+<img id="preview" style="width:100%; display:none;">
 
-  <hr>
+<button onclick="createTournament()">Создать</button>
 
-  <div id="adminList"></div>
-  <div id="adminTeams"></div>
+<hr>
+
+<div id="adminList"></div>
+<div id="adminTeams"></div>
+
 </div>
 
 <script>
+
 function showTab(tab){
   document.getElementById("homeTab").style.display="none";
   document.getElementById("tournamentsTab").style.display="none";
@@ -169,8 +136,8 @@ function showTab(tab){
 }
 
 function toggleAdmin(){
-  const panel=document.getElementById("adminPanel");
-  panel.style.right = panel.style.right==="0px" ? "-320px":"0px";
+  const p=document.getElementById("adminPanel");
+  p.style.right = p.style.right==="0px" ? "-320px":"0px";
 }
 
 function openLogin(){
@@ -195,15 +162,56 @@ async function login(){
   }
 }
 
+/* preview */
+document.getElementById("imageFile").onchange=e=>{
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const img=document.getElementById("preview");
+    img.src=reader.result;
+    img.style.display="block";
+  };
+  reader.readAsDataURL(e.target.files[0]);
+};
+
+async function createTournament(){
+  const file=document.getElementById("imageFile").files[0];
+
+  if(!file){
+    alert("Выбери картинку");
+    return;
+  }
+
+  const form=new FormData();
+  form.append("image", file);
+
+  const upload=await fetch("/upload",{method:"POST",body:form});
+  const data=await upload.json();
+
+  const name=document.getElementById("t_name").value;
+  const description=document.getElementById("t_desc").value;
+  const mode=document.getElementById("t_mode").value;
+  const maxSlots=document.getElementById("t_slots").value;
+
+  await fetch("/create-tournament",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    credentials:"include",
+    body:JSON.stringify({name,description,mode,maxSlots,image:data.path})
+  });
+
+  loadTournaments();
+  loadAdmin();
+}
+
 async function loadTournaments(){
   const res=await fetch("/tournaments");
   const data=await res.json();
 
-  const container=document.getElementById("tournaments");
-  container.innerHTML="";
+  const c=document.getElementById("tournaments");
+  c.innerHTML="";
 
   data.forEach(t=>{
-    container.innerHTML+=`
+    c.innerHTML+=`
       <div class="card">
         <img src="${t.image}" style="width:100%">
         <h3>${t.name}</h3>
@@ -217,7 +225,54 @@ function openTournament(id){
   window.location.href="tournament.html?id="+id;
 }
 
+async function loadAdmin(){
+  const res=await fetch("/tournaments");
+  const data=await res.json();
+
+  const c=document.getElementById("adminList");
+  c.innerHTML="";
+
+  data.forEach(t=>{
+    c.innerHTML+=`
+      <div class="card">
+        ${t.name}<br>
+        <button onclick="loadTeamsAdmin('${t._id}')">Команды</button>
+        <button onclick="deleteTournament('${t._id}')">❌</button>
+      </div>
+    `;
+  });
+}
+
+async function loadTeamsAdmin(id){
+  const res=await fetch("/admin/teams/"+id,{credentials:"include"});
+  const data=await res.json();
+
+  const c=document.getElementById("adminTeams");
+  c.innerHTML="";
+
+  data.forEach(t=>{
+    c.innerHTML+=`
+      <div class="card">
+        ${t.team}
+        <button onclick="deleteTeam('${t._id}','${id}')">❌</button>
+      </div>
+    `;
+  });
+}
+
+async function deleteTeam(id,tid){
+  await fetch("/delete/"+id,{method:"DELETE",credentials:"include"});
+  loadTeamsAdmin(tid);
+}
+
+async function deleteTournament(id){
+  await fetch("/delete-tournament/"+id,{method:"DELETE",credentials:"include"});
+  loadTournaments();
+  loadAdmin();
+}
+
 loadTournaments();
+
 </script>
 
 </body>
