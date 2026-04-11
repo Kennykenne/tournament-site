@@ -11,309 +11,101 @@ body {
   font-family: Arial;
   background: radial-gradient(circle at top, #12002b, #000);
   color: white;
-  overflow-x: hidden;
-}
-
-/* ФОН */
-body::before {
-  content: "";
-  position: fixed;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, #7b2cbf22 1px, transparent 1px);
-  background-size: 40px 40px;
-  animation: moveBg 20s linear infinite;
-  z-index: -1;
-}
-
-@keyframes moveBg {
-  from { transform: translate(0, 0); }
-  to { transform: translate(-100px, -100px); }
 }
 
 /* ХЕДЕР */
 .header {
   text-align: center;
-  padding: 80px 20px;
+  padding: 60px 20px;
 }
 
 .header h1 {
-  font-size: 42px;
+  font-size: 36px;
   color: #c77dff;
-  text-shadow: 0 0 20px #a855f7;
 }
 
 .header p {
   color: #aaa;
 }
 
-/* КНОПКИ */
-.btn {
-  background: linear-gradient(45deg, #7b2cbf, #c77dff);
-  border: none;
-  padding: 15px 30px;
-  border-radius: 10px;
-  color: white;
-  cursor: pointer;
-  margin: 10px;
-  box-shadow: 0 0 15px #a855f7;
+/* КАРТОЧКИ */
+.card {
+  background: rgba(20,0,40,0.8);
+  border: 1px solid #7b2cbf;
+  border-radius: 15px;
+  padding: 20px;
+  margin: 15px;
+  text-align: center;
   transition: 0.3s;
 }
 
-.btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 25px #c77dff;
+.card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 20px #c77dff;
 }
 
-/* СЕКЦИИ */
+/* КНОПКА */
+.btn {
+  background: linear-gradient(45deg, #7b2cbf, #c77dff);
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+/* СЕКЦИЯ */
 .section {
   max-width: 900px;
   margin: auto;
   padding: 20px;
 }
 
-/* КАРТОЧКИ */
-.card {
-  background: rgba(20, 0, 40, 0.8);
-  border: 1px solid #7b2cbf;
-  border-radius: 15px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 0 20px rgba(123,44,191,0.5);
-  transition: 0.3s;
-  animation: fadeIn 0.6s ease;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 0 30px #c77dff;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px);}
-  to { opacity: 1; transform: translateY(0);}
-}
-
-/* INPUT */
-input {
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0;
-  border-radius: 8px;
-  border: none;
-  background: #1a0033;
-  color: white;
-}
-
-/* СТАТУС */
-#status {
-  margin-top: 10px;
-  font-weight: bold;
-  color: #00ff88;
-}
-
-/* ПРОГРЕСС */
-#progress {
-  height: 10px;
-  width: 0%;
-  background: #a855f7;
-}
-
-/* 📱 МОБИЛКА */
-@media (max-width: 768px) {
-
-  .header {
-    padding: 40px 10px;
-  }
-
-  .header h1 {
-    font-size: 26px;
-  }
-
-  .header p {
-    font-size: 14px;
-  }
-
-  #timer {
-    font-size: 16px;
-  }
-
-  .section {
-    padding: 10px;
-  }
-
-  .card {
-    padding: 15px;
-    margin: 10px 5px;
-  }
-
-  input {
-    font-size: 14px;
-    padding: 10px;
-  }
-
-  .btn {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-  }
-
-  /* вкладки */
-  .btn {
-    margin: 5px 0;
-  }
-
-  /* список команд */
-  #teamList div {
-    font-size: 14px;
-    padding: 8px;
-  }
-
-}
-</style>
+ </style>
 </head>
 
 <body>
 
 <div class="header">
   <h1>𝑶𝑹𝑮𝑨𝑵𝑰𝑺𝑨𝑻𝑰𝑶𝑵 𝑬𝑴𝑶𝑻𝑰𝑶𝑵𝑺</h1>
-  <p>PUBG Tournament | Futuristic Cup</p>
-  <h2 id="timer"></h2>
+  <p>Мы проводим киберспортивные турниры по PUBG</p>
 </div>
 
-<!-- ВКЛАДКИ -->
-<div style="text-align:center;">
-  <button class="btn" onclick="showTab('form')">📝 Регистрация</button>
-  <button class="btn" onclick="showTab('teams')">📋 Список команд</button>
-</div>
+<div class="section">
+  <h2 style="text-align:center;">🎮 Доступные турниры</h2>
 
-<!-- ФОРМА -->
-<div class="section" id="formTab">
-  <div class="card">
-    <h3>Регистрация команды</h3>
-
-    <input id="team" placeholder="Название команды">
-    <input id="nick1" placeholder="Ник игрока 1">
-    <input id="id1" placeholder="ID игрока 1">
-    <input id="nick2" placeholder="Ник игрока 2">
-    <input id="id2" placeholder="ID игрока 2">
-    <input id="contact" placeholder="Telegram капитана">
-
-    <button class="btn" onclick="send()">Отправить</button>
-
-    <p id="status"></p>
-
-    <div style="margin-top:20px;">
-      <div style="background:#222; border-radius:10px; overflow:hidden;">
-        <div id="progress"></div>
-      </div>
-      <p>Заполнено слотов</p>
-    </div>
-  </div>
-</div>
-
-<!-- СПИСОК -->
-<div class="section" id="teamsTab" style="display:none;">
-  <div class="card">
-    <h3>📋 Список команд</h3>
-    <div id="teamList"></div>
-  </div>
+  <div id="tournaments"></div>
 </div>
 
 <script>
-function showTab(tab) {
-  document.getElementById("formTab").style.display = "none";
-  document.getElementById("teamsTab").style.display = "none";
-
-  if (tab === "form") {
-    document.getElementById("formTab").style.display = "block";
-   } else {
-    document.getElementById("teamsTab").style.display = "block";
-    loadTeams();
-   }
- }
-
- async function loadTeams() {
-  const res = await fetch("https://tournament-site-ih81.onrender.com/teams");
+async function loadTournaments() {
+  const res = await fetch("https://tournament-site-ih81.onrender.com/tournaments");
   const data = await res.json();
 
-  const list = document.getElementById("teamList");
-  const progress = document.getElementById("progress");
-
-  list.innerHTML = "";
+  const container = document.getElementById("tournaments");
+  container.innerHTML = "";
 
   data.forEach(t => {
     const div = document.createElement("div");
-    div.innerText = `#${t.slot} — ${t.team}`;
-    list.appendChild(div);
+    div.className = "card";
+
+    div.innerHTML = `
+      <h3>${t.name}</h3>
+      <p>${t.description}</p>
+      <p>🎮 ${t.mode}</p>
+      <button class="btn" onclick="openTournament('${t._id}')">Открыть</button>
+    `;
+
+    container.appendChild(div);
   });
+}
 
-  const percent = Math.min((data.length / 48) * 100, 100);
-  progress.style.width = percent + "%";
- }
+function openTournament(id) {
+  window.location.href = "tournament.html?id=" + id;
+}
 
- async function send() {
-  const team = document.getElementById("team").value.trim();
-  const nick1 = document.getElementById("nick1").value.trim();
-  const id1 = document.getElementById("id1").value.trim();
-  const nick2 = document.getElementById("nick2").value.trim();
-  const id2 = document.getElementById("id2").value.trim();
-  const contact = document.getElementById("contact").value.trim();
-
-  if (!team || !nick1 || !id1 || !nick2 || !id2 || !contact) {
-    document.getElementById("status").innerText = "❗ Заполни все поля";
-    return;
-  }
-
-  const players = `
- 1. ${nick1} (ID: ${id1})
- 2. ${nick2} (ID: ${id2})
- `;
-
-  try {
-    const res = await fetch("https://tournament-site-ih81.onrender.com/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ team, players, contact })
-    });
-
-    const data = await res.json();
-
-    document.getElementById("status").innerText =
-      data.slot === "RESERVE"
-        ? "⏳ Вы в резерве"
-        : `✅ Ваш слот: ${data.slot}`;
-
-    loadTeams();
-   } catch (err) {
-    document.getElementById("status").innerText = "❌ Ошибка соединения";
-   }
- }
-
- const targetDate = new Date("2026-05-01T18:00:00");
-
- function updateTimer() {
-  const now = new Date();
-  const diff = targetDate - now;
-
-  if (diff <= 0) {
-    document.getElementById("timer").innerText = "🔥 Турнир начался!";
-    return;
-  }
-
-  const hours = Math.floor(diff / 1000 / 60 / 60);
-  const minutes = Math.floor((diff / 1000 / 60) % 60);
-  const seconds = Math.floor((diff / 1000) % 60);
-
-  document.getElementById("timer").innerText =
-    `⏳ До старта: ${hours}ч ${minutes}м ${seconds}с`;
- }
-
- setInterval(updateTimer, 1000);
- updateTimer();
- loadTeams();
+loadTournaments();
 </script>
 
 </body>
