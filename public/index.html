@@ -18,17 +18,8 @@ body {
   padding: 40px 20px;
 }
 
-.header h1 {
-  color: #c77dff;
-}
-
-.tabs {
-  text-align:center;
-}
-
 .card {
   background: rgba(20,0,40,0.8);
-  border: 1px solid #7b2cbf;
   border-radius: 15px;
   padding: 20px;
   margin: 15px;
@@ -40,11 +31,6 @@ body {
   border-radius: 10px;
   color: white;
   cursor: pointer;
-}
-
-.section {
-  max-width: 900px;
-  margin: auto;
 }
 
 #adminPanel {
@@ -63,34 +49,16 @@ body {
 
 <body>
 
-<!-- кнопки -->
 <div style="position:fixed; top:10px; right:10px;">
-  <button class="btn" onclick="openLogin()">🔐</button>
-  <button class="btn" onclick="toggleAdmin()">⚙️</button>
+  <button onclick="openLogin()">🔐</button>
+  <button onclick="toggleAdmin()">⚙️</button>
 </div>
 
 <div class="header">
   <h1>ORGANISATION EMOTIONS</h1>
 </div>
 
-<!-- вкладки -->
-<div class="tabs">
-  <button onclick="showTab('home')">🏠 Главная</button>
-  <button onclick="showTab('tournaments')">🎮 Турниры</button>
-</div>
-
-<!-- главная -->
-<div id="homeTab" class="section">
-  <div class="card">
-    <h2>О нас</h2>
-    <p>Тут ты добавишь описание организации</p>
-  </div>
-</div>
-
-<!-- турниры -->
-<div id="tournamentsTab" class="section" style="display:none;">
-  <div id="tournaments"></div>
-</div>
+<div id="tournaments"></div>
 
 <!-- LOGIN -->
 <div id="loginModal" style="display:none; position:fixed; width:100%; height:100%; background:#000a;">
@@ -100,16 +68,19 @@ body {
   </div>
 </div>
 
-<!-- админка -->
+<!-- ADMIN -->
 <div id="adminPanel">
 
-<h3>⚙️ Админка</h3>
+<h3>Админка</h3>
 
 <input id="t_name" placeholder="Название">
 <input id="t_desc" placeholder="Описание">
 <input id="t_mode" placeholder="Режим">
 <input id="t_slots" placeholder="Слоты">
-<input id="t_image" placeholder="Картинка">
+
+<input type="file" id="imageFile">
+
+<img id="preview" style="width:100%; display:none; margin-top:10px;">
 
 <button onclick="createTournament()">Создать</button>
 
@@ -122,20 +93,9 @@ body {
 
 <script>
 
-function showTab(tab){
-  document.getElementById("homeTab").style.display="none";
-  document.getElementById("tournamentsTab").style.display="none";
-
-  if(tab==="home"){
-    document.getElementById("homeTab").style.display="block";
-  } else {
-    document.getElementById("tournamentsTab").style.display="block";
-  }
-}
-
 function toggleAdmin(){
-  const panel=document.getElementById("adminPanel");
-  panel.style.right = panel.style.right==="0px" ? "-320px" : "0px";
+  const p=document.getElementById("adminPanel");
+  p.style.right = p.style.right==="0px" ? "-320px":"0px";
 }
 
 function openLogin(){
@@ -160,15 +120,60 @@ async function login(){
   }
 }
 
+document.getElementById("imageFile").onchange = e => {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    const img = document.getElementById("preview");
+    img.src = reader.result;
+    img.style.display = "block";
+  };
+
+  reader.readAsDataURL(file);
+};
+
+async function createTournament(){
+  const file=document.getElementById("imageFile").files[0];
+
+  if(!file){
+    alert("Выбери картинку");
+    return;
+  }
+
+  const form=new FormData();
+  form.append("image", file);
+
+  const upload=await fetch("/upload",{method:"POST",body:form});
+  const data=await upload.json();
+
+  const name=document.getElementById("t_name").value;
+  const description=document.getElementById("t_desc").value;
+  const mode=document.getElementById("t_mode").value;
+  const maxSlots=document.getElementById("t_slots").value;
+
+  await fetch("/create-tournament",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    credentials:"include",
+    body:JSON.stringify({
+      name,description,mode,maxSlots,image:data.path
+    })
+  });
+
+  loadTournaments();
+  loadAdmin();
+}
+
 async function loadTournaments(){
   const res=await fetch("/tournaments");
   const data=await res.json();
 
-  const container=document.getElementById("tournaments");
-  container.innerHTML="";
+  const c=document.getElementById("tournaments");
+  c.innerHTML="";
 
   data.forEach(t=>{
-    container.innerHTML+=`
+    c.innerHTML+=`
       <div class="card">
         <img src="${t.image}" style="width:100%">
         <h3>${t.name}</h3>
@@ -178,44 +183,39 @@ async function loadTournaments(){
   });
 }
 
+function openTournament(id){
+  window.location.href="tournament.html?id="+id;
+}
+
 async function loadAdmin(){
   const res=await fetch("/tournaments");
   const data=await res.json();
 
-  const container=document.getElementById("adminList");
-  container.innerHTML="";
+  const c=document.getElementById("adminList");
+  c.innerHTML="";
 
   data.forEach(t=>{
-    container.innerHTML+=`
+    c.innerHTML+=`
       <div class="card">
-        <b>${t.name}</b><br>
+        ${t.name}<br>
         <button onclick="loadTeamsAdmin('${t._id}')">Команды</button>
-        <button onclick="toggleReg('${t._id}')">Открыть/Закрыть</button>
         <button onclick="deleteTournament('${t._id}')">❌</button>
       </div>
     `;
   });
 }
 
-async function toggleReg(id){
-  await fetch("/toggle-registration/"+id,{
-    method:"POST",
-    credentials:"include"
-  });
-  alert("Статус регистрации изменён");
-}
-
 async function loadTeamsAdmin(id){
   const res=await fetch("/admin/teams/"+id,{credentials:"include"});
   const data=await res.json();
 
-  const container=document.getElementById("adminTeams");
-  container.innerHTML="";
+  const c=document.getElementById("adminTeams");
+  c.innerHTML="";
 
   data.forEach(t=>{
-    container.innerHTML+=`
+    c.innerHTML+=`
       <div class="card">
-        ${t.team}<br>
+        ${t.team}
         <button onclick="deleteTeam('${t._id}','${id}')">❌</button>
       </div>
     `;
@@ -229,28 +229,6 @@ async function deleteTeam(id,tid){
 
 async function deleteTournament(id){
   await fetch("/delete-tournament/"+id,{method:"DELETE",credentials:"include"});
-  loadTournaments();
-  loadAdmin();
-}
-
-function openTournament(id){
-  window.location.href="tournament.html?id="+id;
-}
-
-async function createTournament(){
-  const name=document.getElementById("t_name").value;
-  const description=document.getElementById("t_desc").value;
-  const mode=document.getElementById("t_mode").value;
-  const maxSlots=document.getElementById("t_slots").value;
-  const image=document.getElementById("t_image").value;
-
-  await fetch("/create-tournament",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    credentials:"include",
-    body:JSON.stringify({name,description,mode,image,maxSlots})
-  });
-
   loadTournaments();
   loadAdmin();
 }

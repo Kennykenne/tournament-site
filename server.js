@@ -3,9 +3,11 @@ const axios = require("axios");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const session = require("express-session");
+const multer = require("multer");
+const path = require("path");
 
-const TOKEN = "8736212653:AAGQVrBHFDKL5FrnlSgq2JCIPo72zGjwgBI";
-const CHAT_ID = "6113649669";
+const TOKEN = "ТВОЙ_ТОКЕН";
+const CHAT_ID = "ТВОЙ_CHAT_ID";
 
 mongoose.connect("mongodb+srv://kenny:123456123@cluster0.pak425i.mongodb.net/tournament?retryWrites=true&w=majority")
 .then(() => console.log("✅ MongoDB подключена"))
@@ -29,6 +31,25 @@ app.use(session({
 app.use(express.static("public"));
 
 const ADMIN_PASSWORD = "1234";
+
+/* =========================
+   📸 UPLOAD CONFIG
+========================= */
+const storage = multer.diskStorage({
+  destination: "public/uploads",
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage });
+
+/* =========================
+   📸 UPLOAD API
+========================= */
+app.post("/upload", upload.single("image"), (req, res) => {
+  res.json({ path: "/uploads/" + req.file.filename });
+});
 
 /* =========================
    🏆 ТУРНИР
@@ -205,14 +226,6 @@ app.get("/teams/:id", async (req, res) => {
 });
 
 /* =========================
-   👥 ADMIN TEAMS
-========================= */
-app.get("/admin/teams/:id", checkAdmin, async (req, res) => {
-  const teams = await Team.find({ tournamentId: req.params.id });
-  res.json(teams);
-});
-
-/* =========================
    ❌ УДАЛИТЬ КОМАНДУ
 ========================= */
 app.delete("/delete/:id", checkAdmin, async (req, res) => {
@@ -224,12 +237,6 @@ app.delete("/delete/:id", checkAdmin, async (req, res) => {
   await Team.findByIdAndDelete(req.params.id);
 
   let teams = await Team.find({ tournamentId });
-
-  teams = teams.sort((a, b) => {
-    if (a.slot === "RESERVE") return 1;
-    if (b.slot === "RESERVE") return -1;
-    return a.slot - b.slot;
-  });
 
   for (let i = 0; i < teams.length; i++) {
     teams[i].slot = i < 48 ? i + 3 : "RESERVE";
