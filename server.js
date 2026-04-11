@@ -74,7 +74,7 @@ app.post("/create-tournament", async (req, res) => {
 /* =========================
    ❌ УДАЛИТЬ ТУРНИР
 ========================= */
-app.delete("/delete-tournament/:id", checkAdmin, async (req, res) => {
+app.delete("/delete-tournament/:id", async (req, res) => {
   const id = req.params.id;
 
   await Tournament.findByIdAndDelete(id);
