@@ -21,7 +21,7 @@ let adminLoggedIn = false;
 /* =========================
    🏆 ТУРНИР
 ========================= */
-const TournamentSchema = new mongoose.Schema({
+const Tournament = mongoose.model("Tournament", {
   name: String,
   description: String,
   image: String,
@@ -29,12 +29,10 @@ const TournamentSchema = new mongoose.Schema({
   maxSlots: Number
 });
 
-const Tournament = mongoose.model("Tournament", TournamentSchema);
-
 /* =========================
    👥 КОМАНДА
 ========================= */
-const TeamSchema = new mongoose.Schema({
+const Team = mongoose.model("Team", {
   team: String,
   players: String,
   contact: String,
@@ -42,7 +40,15 @@ const TeamSchema = new mongoose.Schema({
   tournamentId: String
 });
 
-const Team = mongoose.model("Team", TeamSchema);
+/* =========================
+   🔐 ПРОВЕРКА АДМИНА
+========================= */
+function checkAdmin(req, res, next) {
+  if (!adminLoggedIn) {
+    return res.status(403).send("Forbidden");
+  }
+  next();
+}
 
 /* =========================
    ➕ СОЗДАТЬ ТУРНИР
@@ -54,7 +60,7 @@ app.post("/create-tournament", async (req, res) => {
     return res.status(400).json({ error: "Заполни все поля" });
   }
 
-  const t = new Tournament({
+  await Tournament.create({
     name,
     description,
     image,
@@ -62,7 +68,17 @@ app.post("/create-tournament", async (req, res) => {
     maxSlots: Number(maxSlots)
   });
 
-  await t.save();
+  res.json({ success: true });
+});
+
+/* =========================
+   ❌ УДАЛИТЬ ТУРНИР
+========================= */
+app.delete("/delete-tournament/:id", checkAdmin, async (req, res) => {
+  const id = req.params.id;
+
+  await Tournament.findByIdAndDelete(id);
+  await Team.deleteMany({ tournamentId: id });
 
   res.json({ success: true });
 });
@@ -98,15 +114,9 @@ app.post("/register", async (req, res) => {
 
   const count = await Team.countDocuments({ tournamentId });
 
-  let slot;
-  if (count < tournament.maxSlots) {
-    slot = count + 1;
-  } else {
-    slot = "RESERVE";
-  }
+  let slot = count < tournament.maxSlots ? count + 1 : "RESERVE";
 
-  const newTeam = new Team({ team, players, contact, slot, tournamentId });
-  await newTeam.save();
+  await Team.create({ team, players, contact, slot, tournamentId });
 
   try {
     await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
@@ -129,54 +139,50 @@ app.post("/register", async (req, res) => {
 });
 
 /* =========================
-   📋 КОМАНДЫ
+   📋 КОМАНДЫ ПО ТУРНИРУ
 ========================= */
 app.get("/teams/:id", async (req, res) => {
-  const teams = await Team.find({ tournamentId: req.params.id })
-    .sort({ slot: 1 });
-
+  const teams = await Team.find({ tournamentId: req.params.id }).sort({ slot: 1 });
   res.json(teams);
 });
 
 /* =========================
-   ❌ УДАЛЕНИЕ
+   📋 ВСЕ КОМАНДЫ (АДМИН)
 ========================= */
-app.delete("/delete/:id", async (req, res) => {
-  try {
-    const team = await Team.findById(req.params.id);
-    if (!team) return res.json({ success: false });
-
-    const tournamentId = team.tournamentId;
-
-    await Team.findByIdAndDelete(req.params.id);
-
-    let teams = await Team.find({ tournamentId });
-
-    teams = teams.sort((a, b) => {
-      if (a.slot === "RESERVE") return 1;
-      if (b.slot === "RESERVE") return -1;
-      return a.slot - b.slot;
-    });
-
-    for (let i = 0; i < teams.length; i++) {
-      if (i < 48) {
-        teams[i].slot = i + 1;
-      } else {
-        teams[i].slot = "RESERVE";
-      }
-      await teams[i].save();
-    }
-
-    res.json({ success: true });
-
-  } catch (err) {
-    console.log(err);
-    res.status(500).send("error");
-  }
+app.get("/admin/teams/:id", checkAdmin, async (req, res) => {
+  const teams = await Team.find({ tournamentId: req.params.id });
+  res.json(teams);
 });
 
 /* =========================
-   🔐 АДМИН
+   ❌ УДАЛИТЬ КОМАНДУ
+========================= */
+app.delete("/delete/:id", checkAdmin, async (req, res) => {
+  const team = await Team.findById(req.params.id);
+  if (!team) return res.json({ success: false });
+
+  const tournamentId = team.tournamentId;
+
+  await Team.findByIdAndDelete(req.params.id);
+
+  let teams = await Team.find({ tournamentId });
+
+  teams = teams.sort((a, b) => {
+    if (a.slot === "RESERVE") return 1;
+    if (b.slot === "RESERVE") return -1;
+    return a.slot - b.slot;
+  });
+
+  for (let i = 0; i < teams.length; i++) {
+    teams[i].slot = i < 48 ? i + 1 : "RESERVE";
+    await teams[i].save();
+  }
+
+  res.json({ success: true });
+});
+
+/* =========================
+   🔐 АДМИН ЛОГИН
 ========================= */
 app.post("/api/admin-login", (req, res) => {
   if (req.body.password === ADMIN_PASSWORD) {

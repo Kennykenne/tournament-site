@@ -34,22 +34,16 @@ body {
   padding: 20px;
   margin: 15px;
   text-align: center;
-  transition: 0.3s;
-}
-
-.card:hover {
-  transform: scale(1.03);
-  box-shadow: 0 0 20px #c77dff;
 }
 
 .btn {
   background: linear-gradient(45deg, #7b2cbf, #c77dff);
-  padding: 10px 20px;
+  padding: 10px;
   border: none;
   border-radius: 10px;
   color: white;
   cursor: pointer;
-  margin-top: 10px;
+  margin-top: 5px;
 }
 
 .section {
@@ -58,14 +52,12 @@ body {
   padding: 20px;
 }
 
-/* 🔐 кнопка входа */
 .loginBtn {
   position: fixed;
   top: 20px;
   right: 20px;
 }
 
-/* 🔐 панель */
 #adminPanel {
   position: fixed;
   right: 0;
@@ -75,6 +67,7 @@ body {
   background: #0b001a;
   padding: 15px;
   display: none;
+  overflow: auto;
 }
 </style>
 </head>
@@ -95,25 +88,31 @@ body {
   <div id="tournaments"></div>
 </div>
 
-<!-- 🔐 LOGIN -->
-<div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a;">
+<!-- LOGIN -->
+<div id="loginModal" style="display:none; position:fixed; width:100%; height:100%; background:#000a;">
   <div style="background:#111; padding:20px; max-width:300px; margin:100px auto;">
     <input id="adminPass" placeholder="Пароль">
     <button class="btn" onclick="login()">Войти</button>
   </div>
 </div>
 
-<!-- 🔐 АДМИНКА -->
+<!-- АДМИНКА -->
 <div id="adminPanel">
   <h3>⚙️ Админка</h3>
 
+  <h4>Создать турнир</h4>
   <input id="t_name" placeholder="Название">
   <input id="t_desc" placeholder="Описание">
   <input id="t_mode" placeholder="Режим">
   <input id="t_slots" placeholder="Слоты">
-  <input id="t_image" placeholder="Ссылка на картинку">
+  <input id="t_image" placeholder="Картинка URL">
 
   <button class="btn" onclick="createTournament()">Создать</button>
+
+  <hr>
+
+  <h4>Управление турнирами</h4>
+  <div id="adminList"></div>
 </div>
 
 <script>
@@ -124,11 +123,9 @@ function openLogin() {
 async function login() {
   const password = document.getElementById("adminPass").value;
 
-  const res = await fetch("https://tournament-site-ih81.onrender.com/api/admin-login", {
+  const res = await fetch("/api/admin-login", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: {"Content-Type":"application/json"},
     body: JSON.stringify({ password })
   });
 
@@ -138,31 +135,47 @@ async function login() {
     localStorage.setItem("admin", "true");
     document.getElementById("loginModal").style.display = "none";
     document.getElementById("adminPanel").style.display = "block";
+    loadAdmin();
   } else {
     alert("❌ Неверный пароль");
   }
 }
 
 async function loadTournaments() {
-  const res = await fetch("https://tournament-site-ih81.onrender.com/tournaments");
+  const res = await fetch("/tournaments");
   const data = await res.json();
 
   const container = document.getElementById("tournaments");
   container.innerHTML = "";
 
   data.forEach(t => {
-    const div = document.createElement("div");
-    div.className = "card";
-
-    div.innerHTML = `
-      <img src="${t.image}" style="width:100%; border-radius:10px;">
-      <h3>${t.name}</h3>
-      <p>${t.description}</p>
-      <p>🎮 ${t.mode}</p>
-      <button class="btn" onclick="openTournament('${t._id}')">Открыть</button>
+    container.innerHTML += `
+      <div class="card">
+        <img src="${t.image}" style="width:100%; border-radius:10px;">
+        <h3>${t.name}</h3>
+        <p>${t.description}</p>
+        <p>${t.mode}</p>
+        <button class="btn" onclick="openTournament('${t._id}')">Открыть</button>
+      </div>
     `;
+  });
+}
 
-    container.appendChild(div);
+async function loadAdmin() {
+  const res = await fetch("/tournaments");
+  const data = await res.json();
+
+  const container = document.getElementById("adminList");
+  container.innerHTML = "";
+
+  data.forEach(t => {
+    container.innerHTML += `
+      <div style="border:1px solid #555; padding:10px; margin:10px;">
+        <b>${t.name}</b><br>
+        <button onclick="openTournament('${t._id}')">Открыть</button>
+        <button onclick="deleteTournament('${t._id}')">❌</button>
+      </div>
+    `;
   });
 }
 
@@ -178,31 +191,33 @@ async function createTournament() {
   const image = document.getElementById("t_image").value;
 
   if (!name || !description || !mode || !maxSlots || !image) {
-    alert("❗ Заполни все поля");
+    alert("Заполни всё");
     return;
   }
 
-  await fetch("https://tournament-site-ih81.onrender.com/create-tournament", {
+  await fetch("/create-tournament", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      name,
-      description,
-      mode,
-      image,
-      maxSlots: Number(maxSlots)
-    })
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ name, description, mode, image, maxSlots })
   });
 
-  alert("Турнир создан");
   loadTournaments();
+  loadAdmin();
 }
 
-/* показать админку */
+async function deleteTournament(id) {
+  if (!confirm("Удалить турнир?")) return;
+
+  await fetch("/delete-tournament/" + id, { method: "DELETE" });
+
+  loadTournaments();
+  loadAdmin();
+}
+
+/* авто вход */
 if (localStorage.getItem("admin") === "true") {
   document.getElementById("adminPanel").style.display = "block";
+  loadAdmin();
 }
 
 loadTournaments();
