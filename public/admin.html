@@ -38,7 +38,7 @@
 </div>
 
 <script>
- async function login() {
+async function login() {
   const password = document.getElementById("pass").value;
 
   const res = await fetch("https://tournament-site-ih81.onrender.com/api/admin-login", {
@@ -52,13 +52,18 @@
   const data = await res.json();
 
   if (data.success) {
+
+    localStorage.setItem("admin", "true"); // 👈 ВОТ ЭТО ГЛАВНОЕ
+
     document.getElementById("login").style.display = "none";
     document.getElementById("panel").style.display = "block";
+
     loadTeams();
+
   } else {
     alert("❌ Неверный пароль");
   }
- }
+}
 
  async function loadTeams() {
   const res = await fetch("https://tournament-site-ih81.onrender.com/teams");
@@ -72,11 +77,19 @@
     div.className = "card";
 
     div.innerHTML = `
-      <div>🏆 ${t.team}</div>
-      <div>👥 ${t.players}</div>
-      <div>📩 ${t.contact}</div>
-      <div>🎯 ${t.slot}</div>
-      <button onclick="deleteTeam('${t._id}')">❌ Удалить</button>
+     <div>🏆 <b>${t.team}</b></div>
+     <div>👤 Игроки:</div>
+     <div style="color:#aaa;">${t.players}</div>
+
+     <div>🆔 ID:</div>
+     <div style="color:#aaa;">${t.players}</div>
+
+     <div>📩 Telegram:</div>
+     <div style="color:#aaa;">${t.contact}</div>
+
+     <div>🎯 Слот: ${t.slot}</div>
+
+     <button onclick="deleteTeam('${t._id}')">❌ Удалить</button>
     `;
 
     list.appendChild(div);
@@ -87,6 +100,15 @@
   await fetch("https://tournament-site-ih81.onrender.com/delete/" + id);
   loadTeams();
  }
+ async function deleteTeam(id) {
+  if (!confirm("Удалить команду?")) return;
+
+  await fetch("https://tournament-site-ih81.onrender.com/delete/" + id, {
+    method: "DELETE"
+  });
+
+  loadTeams();
+}
 </script>
 
 </body>
