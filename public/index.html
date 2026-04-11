@@ -15,16 +15,15 @@ body {
 
 .header {
   text-align: center;
-  padding: 60px 20px;
+  padding: 40px 20px;
 }
 
 .header h1 {
-  font-size: 36px;
   color: #c77dff;
 }
 
-.header p {
-  color: #aaa;
+.tabs {
+  text-align:center;
 }
 
 .card {
@@ -33,252 +32,231 @@ body {
   border-radius: 15px;
   padding: 20px;
   margin: 15px;
-  text-align: center;
 }
 
 .btn {
   background: linear-gradient(45deg, #7b2cbf, #c77dff);
   padding: 10px;
-  border: none;
   border-radius: 10px;
   color: white;
   cursor: pointer;
-  margin-top: 5px;
 }
 
 .section {
   max-width: 900px;
   margin: auto;
-  padding: 20px;
-}
-
-.loginBtn {
-  position: fixed;
-  top: 20px;
-  right: 20px;
 }
 
 #adminPanel {
   position: fixed;
-  right: 0;
+  right: -320px;
   top: 0;
   width: 300px;
   height: 100%;
   background: #0b001a;
   padding: 15px;
-  display: none;
-  overflow: auto;
+  transition: 0.3s;
+  overflow:auto;
 }
 </style>
 </head>
 
 <body>
 
-<div class="loginBtn">
-  <button class="btn" onclick="openLogin()">🔐 Войти</button>
+<!-- кнопки -->
+<div style="position:fixed; top:10px; right:10px;">
+  <button class="btn" onclick="openLogin()">🔐</button>
+  <button class="btn" onclick="toggleAdmin()">⚙️</button>
 </div>
 
 <div class="header">
-  <h1>𝑶𝑹𝑮𝑨𝑵𝑰𝑺𝑨𝑻𝑰𝑶𝑵 𝑬𝑴𝑶𝑻𝑰𝑶𝑵𝑺</h1>
-  <p>Мы проводим киберспортивные турниры по PUBG</p>
+  <h1>ORGANISATION EMOTIONS</h1>
 </div>
 
-<div class="section">
-  <h2 style="text-align:center;">🎮 Доступные турниры</h2>
+<!-- вкладки -->
+<div class="tabs">
+  <button onclick="showTab('home')">🏠 Главная</button>
+  <button onclick="showTab('tournaments')">🎮 Турниры</button>
+</div>
+
+<!-- главная -->
+<div id="homeTab" class="section">
+  <div class="card">
+    <h2>О нас</h2>
+    <p>Тут ты добавишь описание организации</p>
+  </div>
+</div>
+
+<!-- турниры -->
+<div id="tournamentsTab" class="section" style="display:none;">
   <div id="tournaments"></div>
 </div>
 
 <!-- LOGIN -->
 <div id="loginModal" style="display:none; position:fixed; width:100%; height:100%; background:#000a;">
   <div style="background:#111; padding:20px; max-width:300px; margin:100px auto;">
-    <input id="adminPass" placeholder="Пароль">
-    <button class="btn" onclick="login()">Войти</button>
+    <input id="adminPass">
+    <button onclick="login()">Войти</button>
   </div>
 </div>
 
-<!-- АДМИНКА -->
+<!-- админка -->
 <div id="adminPanel">
-  <h3>⚙️ Админка</h3>
 
-  <h4>Создать турнир</h4>
-  <input id="t_name" placeholder="Название">
-  <input id="t_desc" placeholder="Описание">
-  <input id="t_mode" placeholder="Режим">
-  <input id="t_slots" placeholder="Слоты">
-  <input id="t_image" placeholder="Картинка URL">
+<h3>⚙️ Админка</h3>
 
-  <button class="btn" onclick="createTournament()">Создать</button>
+<input id="t_name" placeholder="Название">
+<input id="t_desc" placeholder="Описание">
+<input id="t_mode" placeholder="Режим">
+<input id="t_slots" placeholder="Слоты">
+<input id="t_image" placeholder="Картинка">
 
-  <hr>
+<button onclick="createTournament()">Создать</button>
 
-  <h4>🏆 Турниры</h4>
-  <div id="adminList"></div>
+<hr>
 
-  <h4>👥 Команды</h4>
-  <div id="adminTeams"></div>
+<div id="adminList"></div>
+<div id="adminTeams"></div>
+
 </div>
 
 <script>
-function openLogin() {
-  document.getElementById("loginModal").style.display = "block";
+
+function showTab(tab){
+  document.getElementById("homeTab").style.display="none";
+  document.getElementById("tournamentsTab").style.display="none";
+
+  if(tab==="home"){
+    document.getElementById("homeTab").style.display="block";
+  } else {
+    document.getElementById("tournamentsTab").style.display="block";
+  }
 }
 
-async function login() {
-  const password = document.getElementById("adminPass").value;
+function toggleAdmin(){
+  const panel=document.getElementById("adminPanel");
+  panel.style.right = panel.style.right==="0px" ? "-320px" : "0px";
+}
 
-  const res = await fetch("/api/admin-login", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    credentials: "include",
-    body: JSON.stringify({ password })
+function openLogin(){
+  document.getElementById("loginModal").style.display="block";
+}
+
+async function login(){
+  const password=document.getElementById("adminPass").value;
+
+  const res=await fetch("/api/admin-login",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    credentials:"include",
+    body:JSON.stringify({password})
   });
 
-  const data = await res.json();
+  const data=await res.json();
 
-  if (data.success) {
-    document.getElementById("loginModal").style.display = "none";
-    document.getElementById("adminPanel").style.display = "block";
-    loadAdmin();
-  } else {
-    alert("❌ Неверный пароль");
-  }
-}
-
-async function checkAdmin() {
-  const res = await fetch("/api/check-admin", { credentials: "include" });
-  const data = await res.json();
-
-  if (data.admin) {
-    document.getElementById("adminPanel").style.display = "block";
+  if(data.success){
+    toggleAdmin();
     loadAdmin();
   }
 }
 
-async function loadTournaments() {
-  const res = await fetch("/tournaments");
-  const data = await res.json();
+async function loadTournaments(){
+  const res=await fetch("/tournaments");
+  const data=await res.json();
 
-  const container = document.getElementById("tournaments");
-  container.innerHTML = "";
+  const container=document.getElementById("tournaments");
+  container.innerHTML="";
 
-  data.forEach(t => {
-    container.innerHTML += `
+  data.forEach(t=>{
+    container.innerHTML+=`
       <div class="card">
-        <img src="${t.image}" style="width:100%; border-radius:10px;">
+        <img src="${t.image}" style="width:100%">
         <h3>${t.name}</h3>
-        <p>${t.description}</p>
-        <p>${t.mode}</p>
-        <button class="btn" onclick="openTournament('${t._id}')">Открыть</button>
+        <button onclick="openTournament('${t._id}')">Открыть</button>
       </div>
     `;
   });
 }
 
-async function loadAdmin() {
-  const res = await fetch("/tournaments");
-  const data = await res.json();
+async function loadAdmin(){
+  const res=await fetch("/tournaments");
+  const data=await res.json();
 
-  const container = document.getElementById("adminList");
-  container.innerHTML = "";
+  const container=document.getElementById("adminList");
+  container.innerHTML="";
 
-  data.forEach(t => {
-    container.innerHTML += `
-      <div style="border:1px solid #555; padding:10px; margin:10px;">
+  data.forEach(t=>{
+    container.innerHTML+=`
+      <div class="card">
         <b>${t.name}</b><br>
-
-        <button onclick="openTournament('${t._id}')">Открыть</button>
-        <button onclick="loadTeamsAdmin('${t._id}')">👥 Команды</button>
+        <button onclick="loadTeamsAdmin('${t._id}')">Команды</button>
+        <button onclick="toggleReg('${t._id}')">Открыть/Закрыть</button>
         <button onclick="deleteTournament('${t._id}')">❌</button>
       </div>
     `;
   });
 }
 
-async function loadTeamsAdmin(id) {
-  const res = await fetch("/admin/teams/" + id, {
-    credentials: "include"
+async function toggleReg(id){
+  await fetch("/toggle-registration/"+id,{
+    method:"POST",
+    credentials:"include"
   });
+  alert("Статус регистрации изменён");
+}
 
-  const data = await res.json();
+async function loadTeamsAdmin(id){
+  const res=await fetch("/admin/teams/"+id,{credentials:"include"});
+  const data=await res.json();
 
-  const container = document.getElementById("adminTeams");
-  container.innerHTML = "";
+  const container=document.getElementById("adminTeams");
+  container.innerHTML="";
 
-  data.forEach(t => {
-    container.innerHTML += `
-      <div style="border:1px solid #333; margin:10px; padding:10px;">
-        <b>${t.team}</b> (#${t.slot})<br>
-        👥 ${t.players}<br>
-        📩 ${t.contact}<br>
-
-        <button onclick="deleteTeam('${t._id}', '${id}')">
-          ❌ Удалить
-        </button>
+  data.forEach(t=>{
+    container.innerHTML+=`
+      <div class="card">
+        ${t.team}<br>
+        <button onclick="deleteTeam('${t._id}','${id}')">❌</button>
       </div>
     `;
   });
 }
 
-async function deleteTeam(id, tournamentId) {
-  if (!confirm("Удалить команду?")) return;
-
-  const res = await fetch("/delete/" + id, {
-    method: "DELETE",
-    credentials: "include"
-  });
-
-  const data = await res.json();
-
-  if (data.success) {
-    loadTeamsAdmin(tournamentId);
-  }
+async function deleteTeam(id,tid){
+  await fetch("/delete/"+id,{method:"DELETE",credentials:"include"});
+  loadTeamsAdmin(tid);
 }
 
-function openTournament(id) {
-  window.location.href = "tournament.html?id=" + id;
+async function deleteTournament(id){
+  await fetch("/delete-tournament/"+id,{method:"DELETE",credentials:"include"});
+  loadTournaments();
+  loadAdmin();
 }
 
-async function createTournament() {
-  const name = document.getElementById("t_name").value;
-  const description = document.getElementById("t_desc").value;
-  const mode = document.getElementById("t_mode").value;
-  const maxSlots = document.getElementById("t_slots").value;
-  const image = document.getElementById("t_image").value;
+function openTournament(id){
+  window.location.href="tournament.html?id="+id;
+}
 
-  if (!name || !description || !mode || !maxSlots || !image) {
-    alert("Заполни всё");
-    return;
-  }
+async function createTournament(){
+  const name=document.getElementById("t_name").value;
+  const description=document.getElementById("t_desc").value;
+  const mode=document.getElementById("t_mode").value;
+  const maxSlots=document.getElementById("t_slots").value;
+  const image=document.getElementById("t_image").value;
 
-  await fetch("/create-tournament", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    credentials: "include",
-    body: JSON.stringify({ name, description, mode, image, maxSlots })
+  await fetch("/create-tournament",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    credentials:"include",
+    body:JSON.stringify({name,description,mode,image,maxSlots})
   });
 
   loadTournaments();
   loadAdmin();
 }
 
-async function deleteTournament(id) {
-  if (!confirm("Удалить турнир?")) return;
-
-  const res = await fetch("/delete-tournament/" + id, {
-    method: "DELETE",
-    credentials: "include"
-  });
-
-  const data = await res.json();
-
-  if (data.success) {
-    loadTournaments();
-    loadAdmin();
-  }
-}
-
-checkAdmin();
 loadTournaments();
+
 </script>
 
 </body>

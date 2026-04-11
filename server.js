@@ -14,10 +14,7 @@ mongoose.connect("mongodb+srv://kenny:123456123@cluster0.pak425i.mongodb.net/tou
 const app = express();
 
 app.use(express.json());
-app.use(cors({
-  origin: true,
-  credentials: true
-}));
+app.use(cors({ origin: true, credentials: true }));
 
 app.use(session({
   secret: "supersecretkey",
@@ -25,7 +22,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     secure: false,
-    maxAge: 1000 * 60 * 60 * 24 // 1 день
+    maxAge: 1000 * 60 * 60 * 24
   }
 }));
 
@@ -41,7 +38,8 @@ const Tournament = mongoose.model("Tournament", {
   description: String,
   image: String,
   mode: String,
-  maxSlots: Number
+  maxSlots: Number,
+  registrationOpen: Boolean
 });
 
 /* =========================
@@ -56,7 +54,7 @@ const Team = mongoose.model("Team", {
 });
 
 /* =========================
-   🔐 ПРОВЕРКА АДМИНА
+   🔐 ADMIN CHECK
 ========================= */
 function checkAdmin(req, res, next) {
   if (!req.session.admin) {
@@ -77,9 +75,6 @@ app.post("/api/admin-login", (req, res) => {
   }
 });
 
-/* =========================
-   🔐 ПРОВЕРКА СЕССИИ
-========================= */
 app.get("/api/check-admin", (req, res) => {
   res.json({ admin: !!req.session.admin });
 });
@@ -99,7 +94,8 @@ app.post("/create-tournament", checkAdmin, async (req, res) => {
     description,
     image,
     mode,
-    maxSlots: Number(maxSlots)
+    maxSlots: Number(maxSlots),
+    registrationOpen: true
   });
 
   res.json({ success: true });
@@ -115,6 +111,18 @@ app.delete("/delete-tournament/:id", checkAdmin, async (req, res) => {
   await Team.deleteMany({ tournamentId: id });
 
   res.json({ success: true });
+});
+
+/* =========================
+   🔒 ВКЛ/ВЫКЛ РЕГИСТРАЦИИ
+========================= */
+app.post("/toggle-registration/:id", checkAdmin, async (req, res) => {
+  const t = await Tournament.findById(req.params.id);
+
+  t.registrationOpen = !t.registrationOpen;
+  await t.save();
+
+  res.json({ success: true, state: t.registrationOpen });
 });
 
 /* =========================
@@ -146,24 +154,40 @@ app.post("/register", async (req, res) => {
   const tournament = await Tournament.findById(tournamentId);
   if (!tournament) return res.status(404).send("Tournament not found");
 
+  if (!tournament.registrationOpen) {
+    return res.json({ error: "Регистрация закрыта" });
+  }
+
   const count = await Team.countDocuments({ tournamentId });
 
-  let slot = count < tournament.maxSlots ? count + 1 : "RESERVE";
+  let start = 3;
+  let max = tournament.maxSlots;
+
+  if (tournament.mode === "SQUAD") max = 25;
+  if (tournament.mode === "DUO") max = 50;
+
+  let slot = count < max ? start + count : "RESERVE";
 
   await Team.create({ team, players, contact, slot, tournamentId });
 
   try {
     await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
       chat_id: CHAT_ID,
-      text: `🔥 ${tournament.name}
+      text: `
+🔥 НОВАЯ РЕГИСТРАЦИЯ
 
-🏆 ${team}
+🏆 Турнир: ${tournament.name}
 
-👥 ${players}
+👥 Команда: ${team}
 
-📩 ${contact}
+📋 Игроки:
+${players}
 
-🎯 ${slot}`
+📩 Контакт:
+${contact}
+
+🎯 Слот: ${slot}
+`
     });
   } catch (e) {
     console.log("TG error", e.message);
@@ -177,6 +201,14 @@ app.post("/register", async (req, res) => {
 ========================= */
 app.get("/teams/:id", async (req, res) => {
   const teams = await Team.find({ tournamentId: req.params.id }).sort({ slot: 1 });
+  res.json(teams);
+});
+
+/* =========================
+   👥 ADMIN TEAMS
+========================= */
+app.get("/admin/teams/:id", checkAdmin, async (req, res) => {
+  const teams = await Team.find({ tournamentId: req.params.id });
   res.json(teams);
 });
 
@@ -200,7 +232,7 @@ app.delete("/delete/:id", checkAdmin, async (req, res) => {
   });
 
   for (let i = 0; i < teams.length; i++) {
-    teams[i].slot = i < 48 ? i + 1 : "RESERVE";
+    teams[i].slot = i < 48 ? i + 3 : "RESERVE";
     await teams[i].save();
   }
 
