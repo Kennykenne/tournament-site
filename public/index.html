@@ -62,7 +62,7 @@ body {
   position: fixed;
   right: 0;
   top: 0;
-  width: 280px;
+  width: 300px;
   height: 100%;
   background: #0b001a;
   padding: 15px;
@@ -111,8 +111,11 @@ body {
 
   <hr>
 
-  <h4>Управление турнирами</h4>
+  <h4>🏆 Турниры</h4>
   <div id="adminList"></div>
+
+  <h4>👥 Команды</h4>
+  <div id="adminTeams"></div>
 </div>
 
 <script>
@@ -142,10 +145,7 @@ async function login() {
 }
 
 async function checkAdmin() {
-  const res = await fetch("/api/check-admin", {
-    credentials: "include"
-  });
-
+  const res = await fetch("/api/check-admin", { credentials: "include" });
   const data = await res.json();
 
   if (data.admin) {
@@ -185,11 +185,53 @@ async function loadAdmin() {
     container.innerHTML += `
       <div style="border:1px solid #555; padding:10px; margin:10px;">
         <b>${t.name}</b><br>
+
         <button onclick="openTournament('${t._id}')">Открыть</button>
-        <button onclick="deleteTournament('${t._id}')">❌ Удалить</button>
+        <button onclick="loadTeamsAdmin('${t._id}')">👥 Команды</button>
+        <button onclick="deleteTournament('${t._id}')">❌</button>
       </div>
     `;
   });
+}
+
+async function loadTeamsAdmin(id) {
+  const res = await fetch("/admin/teams/" + id, {
+    credentials: "include"
+  });
+
+  const data = await res.json();
+
+  const container = document.getElementById("adminTeams");
+  container.innerHTML = "";
+
+  data.forEach(t => {
+    container.innerHTML += `
+      <div style="border:1px solid #333; margin:10px; padding:10px;">
+        <b>${t.team}</b> (#${t.slot})<br>
+        👥 ${t.players}<br>
+        📩 ${t.contact}<br>
+
+        <button onclick="deleteTeam('${t._id}', '${id}')">
+          ❌ Удалить
+        </button>
+      </div>
+    `;
+  });
+}
+
+async function deleteTeam(id, tournamentId) {
+  if (!confirm("Удалить команду?")) return;
+
+  const res = await fetch("/delete/" + id, {
+    method: "DELETE",
+    credentials: "include"
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    loadTeamsAdmin(tournamentId);
+  }
 }
 
 function openTournament(id) {
@@ -232,8 +274,6 @@ async function deleteTournament(id) {
   if (data.success) {
     loadTournaments();
     loadAdmin();
-  } else {
-    alert("Ошибка");
   }
 }
 
