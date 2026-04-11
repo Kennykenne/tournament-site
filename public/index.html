@@ -13,7 +13,6 @@ body {
   color: white;
 }
 
-/* ХЕДЕР */
 .header {
   text-align: center;
   padding: 60px 20px;
@@ -28,7 +27,6 @@ body {
   color: #aaa;
 }
 
-/* КАРТОЧКИ */
 .card {
   background: rgba(20,0,40,0.8);
   border: 1px solid #7b2cbf;
@@ -44,7 +42,6 @@ body {
   box-shadow: 0 0 20px #c77dff;
 }
 
-/* КНОПКА */
 .btn {
   background: linear-gradient(45deg, #7b2cbf, #c77dff);
   padding: 10px 20px;
@@ -55,17 +52,38 @@ body {
   margin-top: 10px;
 }
 
-/* СЕКЦИЯ */
 .section {
   max-width: 900px;
   margin: auto;
   padding: 20px;
 }
 
- </style>
+/* 🔐 кнопка входа */
+.loginBtn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+}
+
+/* 🔐 панель */
+#adminPanel {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 280px;
+  height: 100%;
+  background: #0b001a;
+  padding: 15px;
+  display: none;
+}
+</style>
 </head>
 
 <body>
+
+<div class="loginBtn">
+  <button class="btn" onclick="openLogin()">🔐 Войти</button>
+</div>
 
 <div class="header">
   <h1>𝑶𝑹𝑮𝑨𝑵𝑰𝑺𝑨𝑻𝑰𝑶𝑵 𝑬𝑴𝑶𝑻𝑰𝑶𝑵𝑺</h1>
@@ -74,11 +92,57 @@ body {
 
 <div class="section">
   <h2 style="text-align:center;">🎮 Доступные турниры</h2>
-
   <div id="tournaments"></div>
 </div>
 
+<!-- 🔐 LOGIN -->
+<div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a;">
+  <div style="background:#111; padding:20px; max-width:300px; margin:100px auto;">
+    <input id="adminPass" placeholder="Пароль">
+    <button class="btn" onclick="login()">Войти</button>
+  </div>
+</div>
+
+<!-- 🔐 АДМИНКА -->
+<div id="adminPanel">
+  <h3>⚙️ Админка</h3>
+
+  <input id="t_name" placeholder="Название">
+  <input id="t_desc" placeholder="Описание">
+  <input id="t_mode" placeholder="Режим">
+  <input id="t_slots" placeholder="Слоты">
+  <input id="t_image" placeholder="Ссылка на картинку">
+
+  <button class="btn" onclick="createTournament()">Создать</button>
+</div>
+
 <script>
+function openLogin() {
+  document.getElementById("loginModal").style.display = "block";
+}
+
+async function login() {
+  const password = document.getElementById("adminPass").value;
+
+  const res = await fetch("https://tournament-site-ih81.onrender.com/api/admin-login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ password })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    localStorage.setItem("admin", "true");
+    document.getElementById("loginModal").style.display = "none";
+    document.getElementById("adminPanel").style.display = "block";
+  } else {
+    alert("❌ Неверный пароль");
+  }
+}
+
 async function loadTournaments() {
   const res = await fetch("https://tournament-site-ih81.onrender.com/tournaments");
   const data = await res.json();
@@ -91,6 +155,7 @@ async function loadTournaments() {
     div.className = "card";
 
     div.innerHTML = `
+      <img src="${t.image}" style="width:100%; border-radius:10px;">
       <h3>${t.name}</h3>
       <p>${t.description}</p>
       <p>🎮 ${t.mode}</p>
@@ -105,37 +170,43 @@ function openTournament(id) {
   window.location.href = "tournament.html?id=" + id;
 }
 
-loadTournaments();
-
 async function createTournament() {
   const name = document.getElementById("t_name").value;
   const description = document.getElementById("t_desc").value;
   const mode = document.getElementById("t_mode").value;
   const maxSlots = document.getElementById("t_slots").value;
+  const image = document.getElementById("t_image").value;
+
+  if (!name || !description || !mode || !maxSlots || !image) {
+    alert("❗ Заполни все поля");
+    return;
+  }
 
   await fetch("https://tournament-site-ih81.onrender.com/create-tournament", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ name, description, mode, maxSlots })
+    body: JSON.stringify({
+      name,
+      description,
+      mode,
+      image,
+      maxSlots: Number(maxSlots)
+    })
   });
 
   alert("Турнир создан");
   loadTournaments();
 }
+
+/* показать админку */
+if (localStorage.getItem("admin") === "true") {
+  document.getElementById("adminPanel").style.display = "block";
+}
+
+loadTournaments();
 </script>
-<div class="section">
-  <div class="card">
-    <h3>⚙️ Добавить турнир (только ты)</h3>
 
-    <input id="t_name" placeholder="Название турнира">
-    <input id="t_desc" placeholder="Описание">
-    <input id="t_mode" placeholder="Режим (DUO / TDM)">
-    <input id="t_slots" placeholder="Слотов (например 48)">
-
-    <button class="btn" onclick="createTournament()">Создать</button>
-  </div>
-</div>
 </body>
 </html>
