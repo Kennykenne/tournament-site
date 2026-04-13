@@ -3,128 +3,162 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Турнир</title>
 
 <style>
 body {
-  margin: 0;
+  margin:0;
   font-family: Arial;
-  background: radial-gradient(circle at top, #12002b, #000);
-  color: white;
+  background:#12002b;
+  color:white;
+  text-align:center;
 }
 
-.header {
-  text-align: center;
-  padding: 30px;
-}
-
+/* карточки */
 .card {
-  background: rgba(20,0,40,0.8);
-  border: 1px solid #7b2cbf;
-  border-radius: 15px;
-  padding: 20px;
-  margin: 15px;
+  max-width:400px;
+  margin:15px auto;
+  padding:15px;
+  background:#1a0033;
+  border-radius:15px;
+  box-shadow:0 0 10px #7b2cbf;
 }
 
-.btn {
-  background: linear-gradient(45deg, #7b2cbf, #c77dff);
-  padding: 10px;
-  border: none;
-  border-radius: 10px;
-  color: white;
-  width: 100%;
+/* кнопки */
+button {
+  background:linear-gradient(45deg,#7b2cbf,#c77dff);
+  border:none;
+  padding:10px;
+  color:white;
+  border-radius:10px;
+  margin:5px;
+  cursor:pointer;
 }
 
+button:hover {
+  transform:scale(1.05);
+}
+
+/* поля */
 input {
-  width: 100%;
-  padding: 10px;
-  margin: 5px 0;
-  border-radius: 8px;
-  border: none;
-  background: #1a0033;
-  color: white;
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+  border:none;
+  border-radius:8px;
+  background:#2a0044;
+  color:white;
+}
+
+/* прогресс */
+.progressBar {
+  background:#222;
+  border-radius:10px;
+  overflow:hidden;
 }
 
 #progress {
-  height: 10px;
-  background: #a855f7;
-  width: 0%;
+  height:10px;
+  background:#c77dff;
+  width:0%;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-  <h1 id="name"></h1>
-  <p id="desc"></p>
-  <p id="mode"></p>
+<!-- кнопки -->
+<div>
+  <button onclick="location.href='/'">🏠 Главная</button>
+  <button onclick="history.back()">⬅ Назад</button>
 </div>
 
-<div class="card">
-  <img id="image" style="width:100%; border-radius:10px;">
-</div>
+<h2 id="name"></h2>
+<p id="desc"></p>
 
+<!-- прогресс -->
 <div class="card">
-  <div style="background:#222; border-radius:10px;">
+  <div class="progressBar">
     <div id="progress"></div>
   </div>
   <p id="slots"></p>
 </div>
 
+<!-- регистрация -->
 <div class="card">
-  <h3>Регистрация</h3>
 
-  <input id="team" placeholder="Команда">
-  <input id="nick1" placeholder="Игрок 1">
-  <input id="id1" placeholder="ID 1">
-  <input id="nick2" placeholder="Игрок 2">
-  <input id="id2" placeholder="ID 2">
-  <input id="contact" placeholder="Telegram">
+<h3>Регистрация</h3>
 
-  <button class="btn" onclick="register()">Регистрация</button>
+<input id="team" placeholder="Название команды">
+<input id="nick1" placeholder="Игрок 1">
+<input id="id1" placeholder="ID 1">
+<input id="nick2" placeholder="Игрок 2">
+<input id="id2" placeholder="ID 2">
+<input id="contact" placeholder="Telegram">
 
-  <p id="status"></p>
+<button onclick="checkSubscribe()">🚀 Зарегистрироваться</button>
+
+<p id="status"></p>
+
 </div>
 
+<!-- команды -->
 <div class="card">
-  <h3>Список команд</h3>
-  <div id="teams"></div>
+<h3>Список команд</h3>
+<div id="teams"></div>
 </div>
 
 <script>
 const id = new URLSearchParams(location.search).get("id");
 
-async function loadTournament() {
+/* турнир */
+async function loadTournament(){
   const res = await fetch("/tournament/" + id);
   const t = await res.json();
 
   document.getElementById("name").innerText = t.name;
   document.getElementById("desc").innerText = t.description;
-  document.getElementById("mode").innerText = "🎮 " + t.mode;
-  document.getElementById("image").src = t.image;
 }
 
-async function loadTeams() {
+/* команды */
+async function loadTeams(){
   const res = await fetch("/teams/" + id);
   const data = await res.json();
 
   const list = document.getElementById("teams");
   list.innerHTML = "";
 
-  data.forEach(t => {
-    const div = document.createElement("div");
-    div.innerText = `#${t.slot} — ${t.team}`;
-    list.appendChild(div);
+  data.forEach((t,i)=>{
+    let medal = "";
+    if(i===0) medal="🥇";
+    if(i===1) medal="🥈";
+    if(i===2) medal="🥉";
+
+    list.innerHTML += `
+      <div>
+        ${medal} #${t.slot} ${t.team}
+      </div>
+    `;
   });
 
+  // прогресс
   const percent = (data.length / 48) * 100;
   document.getElementById("progress").style.width = percent + "%";
   document.getElementById("slots").innerText =
-    `${data.length} / 48 команд`;
+    data.length + " / 48 команд";
 }
 
-async function register() {
+/* проверка подписки */
+function checkSubscribe(){
+  if(!confirm("Подписался на Telegram канал?")){
+    window.open("https://t.me/YOUR_CHANNEL");
+    return;
+  }
+
+  register();
+}
+
+/* регистрация */
+async function register(){
   const team = document.getElementById("team").value;
   const nick1 = document.getElementById("nick1").value;
   const id1 = document.getElementById("id1").value;
@@ -132,34 +166,33 @@ async function register() {
   const id2 = document.getElementById("id2").value;
   const contact = document.getElementById("contact").value;
 
-  if (!team || !nick1 || !id1 || !nick2 || !id2 || !contact) {
+  if(!team || !nick1 || !id1 || !nick2 || !id2 || !contact){
     alert("Заполни всё");
     return;
   }
 
   const players = `${nick1} (${id1})\n${nick2} (${id2})`;
 
-  const res = await fetch("/register", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({
-      team,
-      players,
-      contact,
-      tournamentId: id
-    })
+  const res = await fetch("/register",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({team,players,contact,tournamentId:id})
   });
 
   const data = await res.json();
 
-  document.getElementById("status").innerText =
-    data.slot === "RESERVE"
-    ? "Резерв"
-    : "Слот: " + data.slot;
+  if(data.error){
+    status.innerText = data.error;
+    return;
+  }
+
+  status.innerText =
+    data.slot === "RESERVE" ? "Резерв" : "Слот: " + data.slot;
 
   loadTeams();
 }
 
+/* запуск */
 loadTournament();
 loadTeams();
 </script>
