@@ -1,107 +1,33 @@
 <!DOCTYPE html>
 <html>
-<body style="background:black;color:white;font-family:sans-serif">
+<body style="background:#0b001a;color:white">
 
-<div style="position:fixed; top:10px; right:10px;">
-  <button onclick="openAuth()">👤</button>
-</div>
+<h1>ORGANISATION EMOTIONS</h1>
 
-<h1 style="text-align:center;">ORGANISATION EMOTIONS</h1>
-
-<!-- AUTH -->
-<div id="authModal" style="display:none; position:fixed; width:100%; height:100%; background:#000a;">
-  <div style="background:#111; padding:20px; max-width:300px; margin:100px auto;">
-    <input id="login" placeholder="Логин"><br>
-    <input id="password" type="password" placeholder="Пароль"><br>
-
-    <button onclick="login()">Войти</button>
-    <button onclick="registerUser()">Регистрация</button>
-  </div>
-</div>
-
-<!-- USER -->
-<div id="userInfo" style="text-align:center;margin-top:20px;"></div>
-
-<!-- ADMIN -->
-<div id="adminPanel" style="display:none;text-align:center;margin-top:20px;">
-  <h2>⚙️ Админка</h2>
-</div>
+<div id="tournaments"></div>
 
 <script>
 
-function openAuth(){
-  authModal.style.display="block";
-}
-
-/* REGISTER */
-async function registerUser(){
-  const res = await fetch("/api/register",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      login:login.value,
-      password:password.value
-    })
-  });
-
+async function load(){
+  const res = await fetch("/tournaments");
   const data = await res.json();
 
-  if(data.error){
-    alert(data.error);
-  } else {
-    alert("Аккаунт создан");
-  }
-}
+  tournaments.innerHTML="";
 
-/* LOGIN */
-async function login(){
-  const res = await fetch("/api/login",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    credentials:"include",
-    body:JSON.stringify({
-      login:login.value,
-      password:password.value
-    })
-  });
-
-  const data = await res.json();
-
-  if(data.error){
-    alert(data.error);
-    return;
-  }
-
-  authModal.style.display="none";
-  loadUser();
-}
-
-/* USER LOAD */
-async function loadUser(){
-  const res = await fetch("/api/me",{credentials:"include"});
-  const data = await res.json();
-
-  if(data.user){
-    userInfo.innerHTML = `
-      👤 ${data.user.login}
-      <button onclick="logout()">🚪 Выйти</button>
+  data.forEach(t=>{
+    tournaments.innerHTML+=`
+      <div style="margin:20px;padding:10px;background:#1a0033">
+        <img src="${t.image}" style="width:200px">
+        <h3>${t.name}</h3>
+        <button onclick="location.href='tournament.html?id=${t._id}'">
+        Играть
+        </button>
+      </div>
     `;
-
-    if(data.user.isAdmin){
-      adminPanel.style.display="block";
-    }
-  } else {
-    userInfo.innerHTML = "Гость";
-  }
+  });
 }
 
-/* LOGOUT */
-async function logout(){
-  await fetch("/api/logout",{method:"POST"});
-  location.reload();
-}
-
-loadUser();
+load();
 
 </script>
 

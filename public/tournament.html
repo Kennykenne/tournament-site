@@ -1,19 +1,17 @@
 <!DOCTYPE html>
 <html>
-<body>
+<body style="background:#12002b;color:white">
 
 <button onclick="location.href='/'">🏠</button>
 
 <h2 id="name"></h2>
 
-<input id="team">
+<input id="team" placeholder="Команда">
 <input id="nick1">
 <input id="id1">
-<input id="nick2">
-<input id="id2">
 <input id="contact">
 
-<button onclick="reg()">REGISTER</button>
+<button onclick="reg()">Регистрация</button>
 
 <div id="teams"></div>
 
@@ -33,10 +31,6 @@ async function load(){
 }
 
 async function reg(){
-  if(!team.value){
-  alert("Введите команду");
-  return;
- }
   const players=`${nick1.value} (${id1.value})`;
 
   await fetch("/register",{
