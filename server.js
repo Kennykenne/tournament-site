@@ -1,13 +1,7 @@
 const express = require("express");
-const axios = require("axios");
-const cors = require("cors");
 const mongoose = require("mongoose");
 const session = require("express-session");
-const multer = require("multer");
-const path = require("path");
-
-const TOKEN = "8736212653:AAGQVrBHFDKL5FrnlSgq2JCIPo72zGjwgBI";
-const CHAT_ID = "6113649669";
+const cors = require("cors");
 
 mongoose.connect("mongodb+srv://kenny:123456123@cluster0.pak425i.mongodb.net/tournament")
 .then(()=>console.log("DB OK"));
@@ -31,14 +25,6 @@ const User = mongoose.model("User",{
   password:String,
   isAdmin:Boolean
 });
-
-/* ADMIN CHECK */
-function checkAdmin(req,res,next){
-  if(!req.session.user || !req.session.user.isAdmin){
-    return res.status(403).json({error:"no access"});
-  }
-  next();
-}
 
 /* REGISTER */
 app.post("/api/register", async (req,res)=>{
@@ -68,22 +54,19 @@ app.post("/api/login", async (req,res)=>{
 
   let user = await User.findOne({login,password});
 
-  if(!user){
+  if(!user && !(login==="kenny" && password==="2110")){
     return res.json({error:"Неверный логин или пароль"});
   }
 
-  // 🔥 АДМИН ЧЕРЕЗ КОД
-  if(login === "kenny" && password === "2110"){
-    user.isAdmin = true;
-    await user.save();
+  // админ через код
+  if(login==="kenny" && password==="2110"){
+    req.session.user = {login:"kenny",isAdmin:true};
+    return res.json({success:true,isAdmin:true});
   }
 
   req.session.user = user;
 
-  res.json({
-    success:true,
-    isAdmin:user.isAdmin
-  });
+  res.json({success:true,isAdmin:false});
 });
 
 /* ME */

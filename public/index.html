@@ -1,19 +1,30 @@
 <!DOCTYPE html>
 <html>
-<body style="background:black;color:white">
+<body style="background:black;color:white;font-family:sans-serif">
 
-<button onclick="openAuth()">👤</button>
-
-<div id="authModal" style="display:none">
-<input id="login">
-<input id="password">
-
-<button onclick="login()">Войти</button>
-<button onclick="registerUser()">Регистрация</button>
+<div style="position:fixed; top:10px; right:10px;">
+  <button onclick="openAuth()">👤</button>
 </div>
 
-<div id="adminPanel" style="display:none">
-<h3>АДМИНКА</h3>
+<h1 style="text-align:center;">ORGANISATION EMOTIONS</h1>
+
+<!-- AUTH -->
+<div id="authModal" style="display:none; position:fixed; width:100%; height:100%; background:#000a;">
+  <div style="background:#111; padding:20px; max-width:300px; margin:100px auto;">
+    <input id="login" placeholder="Логин"><br>
+    <input id="password" type="password" placeholder="Пароль"><br>
+
+    <button onclick="login()">Войти</button>
+    <button onclick="registerUser()">Регистрация</button>
+  </div>
+</div>
+
+<!-- USER -->
+<div id="userInfo" style="text-align:center;margin-top:20px;"></div>
+
+<!-- ADMIN -->
+<div id="adminPanel" style="display:none;text-align:center;margin-top:20px;">
+  <h2>⚙️ Админка</h2>
 </div>
 
 <script>
@@ -22,6 +33,7 @@ function openAuth(){
   authModal.style.display="block";
 }
 
+/* REGISTER */
 async function registerUser(){
   const res = await fetch("/api/register",{
     method:"POST",
@@ -41,6 +53,7 @@ async function registerUser(){
   }
 }
 
+/* LOGIN */
 async function login(){
   const res = await fetch("/api/login",{
     method:"POST",
@@ -59,19 +72,33 @@ async function login(){
     return;
   }
 
-  alert("Вход выполнен");
+  authModal.style.display="none";
   loadUser();
 }
 
+/* USER LOAD */
 async function loadUser(){
   const res = await fetch("/api/me",{credentials:"include"});
   const data = await res.json();
 
   if(data.user){
+    userInfo.innerHTML = `
+      👤 ${data.user.login}
+      <button onclick="logout()">🚪 Выйти</button>
+    `;
+
     if(data.user.isAdmin){
       adminPanel.style.display="block";
     }
+  } else {
+    userInfo.innerHTML = "Гость";
   }
+}
+
+/* LOGOUT */
+async function logout(){
+  await fetch("/api/logout",{method:"POST"});
+  location.reload();
 }
 
 loadUser();

@@ -33,6 +33,10 @@ async function load(){
 }
 
 async function reg(){
+  if(!team.value){
+  alert("Введите команду");
+  return;
+ }
   const players=`${nick1.value} (${id1.value})`;
 
   await fetch("/register",{
