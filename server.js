@@ -52,14 +52,33 @@ app.get("/tournament/:id", async (req,res)=>{
 app.post("/register", async (req,res)=>{
   const {team,players,contact,tournamentId} = req.body;
 
+  const tournament = await Tournament.findById(tournamentId);
+
   const count = await Team.countDocuments({tournamentId});
-  let slot = count < 48 ? 3 + count : "RESERVE";
+
+  let max = 48;
+  if(tournament.mode==="TDM") max=20;
+  if(tournament.mode==="DUO") max=50;
+  if(tournament.mode==="SQUAD") max=25;
+
+  let slot = count < max ? 3 + count : "RESERVE";
 
   await Team.create({team,players,contact,slot,tournamentId});
 
   await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`,{
     chat_id:CHAT_ID,
-    text:`🔥 ${team} (${slot})`
+    text:`
+🔥 НОВАЯ РЕГИСТРАЦИЯ
+
+🏆 Турнир: ${tournament.name}
+🎮 Режим: ${tournament.mode}
+
+👥 ${players}
+
+📩 ${contact}
+
+🎯 Слот: ${slot}
+`
   });
 
   res.json({success:true,slot});

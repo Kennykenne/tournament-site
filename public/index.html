@@ -1,10 +1,25 @@
 <!DOCTYPE html>
 <html>
-<body style="background:#0b001a;color:white">
+<body style="background:#0b001a;color:white;font-family:sans-serif">
 
-<h1>ORGANISATION EMOTIONS</h1>
+<h1 style="text-align:center">ORGANISATION EMOTIONS</h1>
 
+<div style="text-align:center">
+<button onclick="window.open('https://t.me/YOUR_CHANNEL')">📩 Telegram</button>
+</div>
+
+<hr>
+
+<h2>🎮 Турниры</h2>
 <div id="tournaments"></div>
+
+<!-- админка -->
+<div style="position:fixed; right:0; top:0; background:#111;padding:10px">
+<input id="t_name" placeholder="Название">
+<input id="t_mode" placeholder="TDM / DUO / SQUAD">
+<input id="t_image" placeholder="Картинка">
+<button onclick="create()">Создать</button>
+</div>
 
 <script>
 
@@ -16,8 +31,8 @@ async function load(){
 
   data.forEach(t=>{
     tournaments.innerHTML+=`
-      <div style="margin:20px;padding:10px;background:#1a0033">
-        <img src="${t.image}" style="width:200px">
+      <div style="margin:10px;padding:10px;background:#1a0033">
+        <img src="${t.image}" width="200">
         <h3>${t.name}</h3>
         <button onclick="location.href='tournament.html?id=${t._id}'">
         Играть
@@ -27,8 +42,21 @@ async function load(){
   });
 }
 
-load();
+async function create(){
+  await fetch("/create-tournament",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      name:t_name.value,
+      mode:t_mode.value,
+      image:t_image.value
+    })
+  });
 
+  load();
+}
+
+load();
 </script>
 
 </body>

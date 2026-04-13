@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html>
-<body style="background:#12002b;color:white">
+<body style="background:#12002b;color:white;font-family:sans-serif">
 
 <button onclick="location.href='/'">🏠</button>
+<button onclick="history.back()">⬅</button>
 
 <h2 id="name"></h2>
+<p id="mode"></p>
 
-<input id="team" placeholder="Команда">
-<input id="nick1">
-<input id="id1">
-<input id="contact">
+<div id="form"></div>
 
 <button onclick="reg()">Регистрация</button>
 
@@ -18,26 +17,81 @@
 <script>
 const id=new URLSearchParams(location.search).get("id");
 
+let currentMode="";
+
 async function load(){
   const t=await fetch("/tournament/"+id).then(r=>r.json());
   name.innerText=t.name;
+  mode.innerText=t.mode;
+  currentMode=t.mode;
+
+  renderForm();
 
   const list=await fetch("/teams/"+id).then(r=>r.json());
   teams.innerHTML="";
 
-  list.forEach(x=>{
-    teams.innerHTML+=`<div>${x.team}</div>`;
+  list.forEach((x,i)=>{
+    let medal = i==0?"🥇":i==1?"🥈":i==2?"🥉":"";
+    teams.innerHTML+=`<div>${medal} ${x.team}</div>`;
   });
 }
 
+function renderForm(){
+  if(currentMode==="TDM"){
+    form.innerHTML=`
+      <input id="nick1" placeholder="Ник">
+      <input id="id1" placeholder="ID">
+      <input id="contact" placeholder="TG">
+    `;
+  }
+
+  if(currentMode==="DUO"){
+    form.innerHTML=`
+      <input id="nick1"><input id="id1">
+      <input id="nick2"><input id="id2">
+      <input id="contact">
+    `;
+  }
+
+  if(currentMode==="SQUAD"){
+    form.innerHTML=`
+      <input id="nick1"><input id="id1">
+      <input id="nick2"><input id="id2">
+      <input id="nick3"><input id="id3">
+      <input id="nick4"><input id="id4">
+      <input id="contact">
+    `;
+  }
+}
+
 async function reg(){
-  const players=`${nick1.value} (${id1.value})`;
+  let players="";
+
+  if(currentMode==="TDM"){
+    players=`${nick1.value} (${id1.value})`;
+  }
+
+  if(currentMode==="DUO"){
+    players=`
+${nick1.value} (${id1.value})
+${nick2.value} (${id2.value})
+`;
+  }
+
+  if(currentMode==="SQUAD"){
+    players=`
+${nick1.value} (${id1.value})
+${nick2.value} (${id2.value})
+${nick3.value} (${id3.value})
+${nick4.value} (${id4.value})
+`;
+  }
 
   await fetch("/register",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
-      team:team.value,
+      team:"TEAM",
       players,
       contact:contact.value,
       tournamentId:id
