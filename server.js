@@ -20,7 +20,8 @@ app.use(cors({origin:true,credentials:true}));
 app.use(session({
   secret:"secret",
   resave:false,
-  saveUninitialized:false
+  saveUninitialized:false,
+  cookie:{maxAge:1000*60*60*24}
 }));
 
 app.use(express.static("public"));
@@ -62,16 +63,51 @@ function checkAdmin(req,res,next){
 /* AUTH */
 app.post("/api/register", async (req,res)=>{
   const {login,password}=req.body;
-  await User.create({login,password,isAdmin:false});
+
+  if(!login || !password){
+    return res.json({error:"Заполни всё"});
+  }
+
+  const exist = await User.findOne({login});
+  if(exist){
+    return res.json({error:"Пользователь уже есть"});
+  }
+
+  await User.create({
+    login,
+    password,
+    isAdmin:false
+  });
+
   res.json({success:true});
 });
 
 app.post("/api/login", async (req,res)=>{
-  const user=await User.findOne(req.body);
-  if(!user) return res.json({error:"error"});
+  const {login,password}=req.body;
 
-  req.session.user=user;
+  const user = await User.findOne({login,password});
+  if(!user){
+    return res.json({error:"Неверные данные"});
+  }
+
+  req.session.user = {
+    id:user._id,
+    login:user.login,
+    isAdmin:user.isAdmin
+  };
+
   res.json({success:true,isAdmin:user.isAdmin});
+});
+
+/* CHECK USER */
+app.get("/api/me",(req,res)=>{
+  res.json({user:req.session.user || null});
+});
+
+/* LOGOUT */
+app.post("/api/logout",(req,res)=>{
+  req.session.destroy();
+  res.json({success:true});
 });
 
 /* IMAGE */
@@ -89,7 +125,21 @@ app.post("/upload",upload.single("image"),(req,res)=>{
 
 /* TOURNAMENT */
 app.post("/create-tournament",checkAdmin,async(req,res)=>{
-  await Tournament.create({...req.body,registrationOpen:true});
+  const {name,description,image,mode,maxSlots}=req.body;
+
+  if(!name || !description || !image){
+    return res.json({error:"Заполни всё"});
+  }
+
+  await Tournament.create({
+    name,
+    description,
+    image,
+    mode,
+    maxSlots:Number(maxSlots),
+    registrationOpen:true
+  });
+
   res.json({success:true});
 });
 
@@ -110,16 +160,24 @@ app.delete("/delete-tournament/:id",checkAdmin,async(req,res)=>{
 /* TEAM */
 app.post("/register",async(req,res)=>{
   const {team,players,contact,tournamentId}=req.body;
-  const count = await Team.countDocuments({tournamentId});
 
+  if(!team || !players || !contact){
+    return res.json({error:"Заполни всё"});
+  }
+
+  const count = await Team.countDocuments({tournamentId});
   let slot = count<48 ? 3+count : "RESERVE";
 
   await Team.create({team,players,contact,slot,tournamentId});
 
-  await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`,{
-    chat_id:CHAT_ID,
-    text:`${team} (${slot})`
-  });
+  try{
+    await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`,{
+      chat_id:CHAT_ID,
+      text:`🔥 ${team}\n🎯 ${slot}`
+    });
+  }catch(e){
+    console.log("TG error",e.message);
+  }
 
   res.json({success:true,slot});
 });
