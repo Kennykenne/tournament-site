@@ -2,164 +2,65 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ORGANISATION EMOTIONS</title>
-
-<style>
-body {
-  margin: 0;
-  font-family: Arial;
-  background: radial-gradient(circle at top, #0b001a, #000);
-  color: white;
-}
-
-/* баннер */
-.banner {
-  text-align: center;
-  padding: 80px 20px;
-}
-
-.banner h1 {
-  font-size: 42px;
-  color: #c77dff;
-  text-shadow: 0 0 20px #a855f7;
-}
-
-.banner p {
-  color: #aaa;
-}
-
-/* кнопки */
-.btn {
-  background: linear-gradient(45deg, #7b2cbf, #c77dff);
-  padding: 12px 20px;
-  border-radius: 10px;
-  color: white;
-  cursor: pointer;
-  border: none;
-  margin: 5px;
-  transition: 0.3s;
-}
-
-.btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 15px #c77dff;
-}
-
-/* секции */
-.section {
-  max-width: 1000px;
-  margin: auto;
-  padding: 20px;
-}
-
-/* карточки */
-.card {
-  background: rgba(20,0,40,0.9);
-  border: 1px solid #7b2cbf;
-  border-radius: 15px;
-  padding: 20px;
-  margin: 15px;
-  text-align: center;
-  transition: 0.3s;
-}
-
-.card:hover {
-  transform: scale(1.03);
-  box-shadow: 0 0 20px #c77dff;
-}
-</style>
+<title>ORG</title>
 </head>
 
 <body>
 
-<!-- баннер -->
-<div class="banner">
-  <h1>ORGANISATION EMOTIONS</h1>
-  <p>Киберспортивные турниры по PUBG</p>
+<h1>ORGANISATION</h1>
 
-  <button class="btn" onclick="scrollToSection('tournaments')">
-    🎮 Смотреть турниры
-  </button>
+<button onclick="openAuth()">👤</button>
 
-  <button class="btn" onclick="window.open('https://t.me/YOUR_CHANNEL')">
-    📩 Telegram
-  </button>
+<div id="auth" style="display:none;">
+<input id="login">
+<input id="password">
+<button onclick="login()">Login</button>
+<button onclick="registerUser()">Register</button>
 </div>
 
-<!-- о нас -->
-<div class="section">
-  <div class="card">
-    <h2>🏠 О нас</h2>
-    <p>
-      Мы проводим киберспортивные турниры по PUBG.  
-      Участвуй, побеждай и попади в историю!
-    </p>
-  </div>
-</div>
-
-<!-- турниры -->
-<div id="tournaments" class="section">
-  <h2>🎮 Активные турниры</h2>
-  <div id="tournamentsList"></div>
-</div>
-
-<!-- история -->
-<div class="section">
-  <h2>🏆 История турниров</h2>
-  <div id="history"></div>
-</div>
+<div id="tournaments"></div>
 
 <script>
 
-/* скролл */
-function scrollToSection(id){
-  document.getElementById(id).scrollIntoView({behavior:"smooth"});
+function openAuth(){
+  auth.style.display="block";
 }
 
-/* турниры */
-async function loadTournaments(){
-  const res = await fetch("/tournaments");
-  const data = await res.json();
+async function registerUser(){
+  await fetch("/api/register",{method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({login:login.value,password:password.value})});
+}
 
-  const c = document.getElementById("tournamentsList");
-  c.innerHTML = "";
+async function login(){
+  const res=await fetch("/api/login",{method:"POST",
+  headers:{"Content-Type":"application/json"},
+  credentials:"include",
+  body:JSON.stringify({login:login.value,password:password.value})});
 
+  const d=await res.json();
+  if(d.success){
+    alert("ok");
+  }
+}
+
+async function load(){
+  const res=await fetch("/tournaments");
+  const data=await res.json();
+
+  tournaments.innerHTML="";
   data.forEach(t=>{
-    c.innerHTML += `
-      <div class="card">
-        <img src="${t.image}" style="width:100%; border-radius:10px;">
-        <h3>${t.name}</h3>
-        <p>${t.mode}</p>
-
-        <button class="btn"
-        onclick="location.href='tournament.html?id=${t._id}'">
-        🎮 Участвовать
-        </button>
-      </div>
-    `;
+    tournaments.innerHTML+=`
+    <div>
+    <h3>${t.name}</h3>
+    <button onclick="location.href='tournament.html?id=${t._id}'">
+    open
+    </button>
+    </div>`;
   });
 }
 
-/* история (пока мок) */
-function loadHistory(){
-  const c = document.getElementById("history");
-
-  c.innerHTML = `
-    <div class="card">
-      🏆 PUBG DUO CUP<br>
-      👑 Победитель: Team Alpha
-    </div>
-
-    <div class="card">
-      🏆 TDM BATTLE<br>
-      👑 Победитель: Team Beta
-    </div>
-  `;
-}
-
-loadTournaments();
-loadHistory();
+load();
 
 </script>
 

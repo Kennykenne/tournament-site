@@ -6,246 +6,126 @@ const session = require("express-session");
 const multer = require("multer");
 const path = require("path");
 
-const TOKEN = "8736212653:AAGQVrBHFDKL5FrnlSgq2JCIPo72zGjwgBI";
-const CHAT_ID = "6113649669";
+const TOKEN = "ТВОЙ_ТОКЕН";
+const CHAT_ID = "ТВОЙ_CHAT_ID";
 
-mongoose.connect("mongodb+srv://kenny:123456123@cluster0.pak425i.mongodb.net/tournament?retryWrites=true&w=majority")
-.then(() => console.log("✅ MongoDB подключена"))
-.catch(err => console.log("❌ MongoDB ошибка:", err));
+mongoose.connect("mongodb+srv://kenny:123456123@cluster0.pak425i.mongodb.net/tournament")
+.then(()=>console.log("DB OK"));
 
 const app = express();
 
 app.use(express.json());
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({origin:true,credentials:true}));
 
 app.use(session({
-  secret: "supersecretkey",
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: false,
-    maxAge: 1000 * 60 * 60 * 24
-  }
+  secret:"secret",
+  resave:false,
+  saveUninitialized:false
 }));
 
 app.use(express.static("public"));
 
-const ADMIN_PASSWORD = "1234";
-
-/* =========================
-   📸 UPLOAD CONFIG
-========================= */
-const storage = multer.diskStorage({
-  destination: "public/uploads",
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
+/* USER */
+const User = mongoose.model("User",{
+  login:String,
+  password:String,
+  isAdmin:Boolean
 });
 
-const upload = multer({ storage });
-
-/* =========================
-   📸 UPLOAD API
-========================= */
-app.post("/upload", upload.single("image"), (req, res) => {
-  res.json({ path: "/uploads/" + req.file.filename });
+/* TOURNAMENT */
+const Tournament = mongoose.model("Tournament",{
+  name:String,
+  description:String,
+  image:String,
+  mode:String,
+  maxSlots:Number,
+  registrationOpen:Boolean
 });
 
-/* =========================
-   🏆 ТУРНИР
-========================= */
-const Tournament = mongoose.model("Tournament", {
-  name: String,
-  description: String,
-  image: String,
-  mode: String,
-  maxSlots: Number,
-  registrationOpen: Boolean
+/* TEAM */
+const Team = mongoose.model("Team",{
+  team:String,
+  players:String,
+  contact:String,
+  slot:String,
+  tournamentId:String
 });
 
-/* =========================
-   👥 КОМАНДА
-========================= */
-const Team = mongoose.model("Team", {
-  team: String,
-  players: String,
-  contact: String,
-  slot: String,
-  tournamentId: String
-});
-
-/* =========================
-   🔐 ADMIN CHECK
-========================= */
-function checkAdmin(req, res, next) {
-  if (!req.session.admin) {
-    return res.status(403).json({ error: "Forbidden" });
+/* ADMIN CHECK */
+function checkAdmin(req,res,next){
+  if(!req.session.user || !req.session.user.isAdmin){
+    return res.status(403).json({error:"no access"});
   }
   next();
 }
 
-/* =========================
-   🔐 LOGIN
-========================= */
-app.post("/api/admin-login", (req, res) => {
-  if (req.body.password === ADMIN_PASSWORD) {
-    req.session.admin = true;
-    res.json({ success: true });
-  } else {
-    res.json({ success: false });
-  }
+/* AUTH */
+app.post("/api/register", async (req,res)=>{
+  const {login,password}=req.body;
+  await User.create({login,password,isAdmin:false});
+  res.json({success:true});
 });
 
-app.get("/api/check-admin", (req, res) => {
-  res.json({ admin: !!req.session.admin });
+app.post("/api/login", async (req,res)=>{
+  const user=await User.findOne(req.body);
+  if(!user) return res.json({error:"error"});
+
+  req.session.user=user;
+  res.json({success:true,isAdmin:user.isAdmin});
 });
 
-/* =========================
-   ➕ СОЗДАТЬ ТУРНИР
-========================= */
-app.post("/create-tournament", checkAdmin, async (req, res) => {
-  const { name, description, image, mode, maxSlots } = req.body;
-
-  if (!name || !description || !image || !mode || !maxSlots) {
-    return res.status(400).json({ error: "Заполни все поля" });
+/* IMAGE */
+const storage = multer.diskStorage({
+  destination:"public/uploads",
+  filename:(req,file,cb)=>{
+    cb(null,Date.now()+path.extname(file.originalname));
   }
+});
+const upload = multer({storage});
 
-  await Tournament.create({
-    name,
-    description,
-    image,
-    mode,
-    maxSlots: Number(maxSlots),
-    registrationOpen: true
+app.post("/upload",upload.single("image"),(req,res)=>{
+  res.json({path:"/uploads/"+req.file.filename});
+});
+
+/* TOURNAMENT */
+app.post("/create-tournament",checkAdmin,async(req,res)=>{
+  await Tournament.create({...req.body,registrationOpen:true});
+  res.json({success:true});
+});
+
+app.get("/tournaments",async(req,res)=>{
+  res.json(await Tournament.find());
+});
+
+app.get("/tournament/:id",async(req,res)=>{
+  res.json(await Tournament.findById(req.params.id));
+});
+
+app.delete("/delete-tournament/:id",checkAdmin,async(req,res)=>{
+  await Tournament.findByIdAndDelete(req.params.id);
+  await Team.deleteMany({tournamentId:req.params.id});
+  res.json({success:true});
+});
+
+/* TEAM */
+app.post("/register",async(req,res)=>{
+  const {team,players,contact,tournamentId}=req.body;
+  const count = await Team.countDocuments({tournamentId});
+
+  let slot = count<48 ? 3+count : "RESERVE";
+
+  await Team.create({team,players,contact,slot,tournamentId});
+
+  await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`,{
+    chat_id:CHAT_ID,
+    text:`${team} (${slot})`
   });
 
-  res.json({ success: true });
+  res.json({success:true,slot});
 });
 
-/* =========================
-   ❌ УДАЛИТЬ ТУРНИР
-========================= */
-app.delete("/delete-tournament/:id", checkAdmin, async (req, res) => {
-  const id = req.params.id;
-
-  await Tournament.findByIdAndDelete(id);
-  await Team.deleteMany({ tournamentId: id });
-
-  res.json({ success: true });
+app.get("/teams/:id",async(req,res)=>{
+  res.json(await Team.find({tournamentId:req.params.id}));
 });
 
-/* =========================
-   🔒 ВКЛ/ВЫКЛ РЕГИСТРАЦИИ
-========================= */
-app.post("/toggle-registration/:id", checkAdmin, async (req, res) => {
-  const t = await Tournament.findById(req.params.id);
-
-  t.registrationOpen = !t.registrationOpen;
-  await t.save();
-
-  res.json({ success: true, state: t.registrationOpen });
-});
-
-/* =========================
-   📋 ТУРНИРЫ
-========================= */
-app.get("/tournaments", async (req, res) => {
-  const data = await Tournament.find().sort({ _id: -1 });
-  res.json(data);
-});
-
-/* =========================
-   🎮 ОДИН ТУРНИР
-========================= */
-app.get("/tournament/:id", async (req, res) => {
-  const t = await Tournament.findById(req.params.id);
-  res.json(t);
-});
-
-/* =========================
-   📥 РЕГИСТРАЦИЯ
-========================= */
-app.post("/register", async (req, res) => {
-  const { team, players, contact, tournamentId } = req.body;
-
-  if (!team || !players || !contact || !tournamentId) {
-    return res.status(400).json({ error: "Заполни все поля" });
-  }
-
-  const tournament = await Tournament.findById(tournamentId);
-  if (!tournament) return res.status(404).send("Tournament not found");
-
-  if (!tournament.registrationOpen) {
-    return res.json({ error: "Регистрация закрыта" });
-  }
-
-  const count = await Team.countDocuments({ tournamentId });
-
-  let start = 3;
-  let max = tournament.maxSlots;
-
-  if (tournament.mode === "SQUAD") max = 25;
-  if (tournament.mode === "DUO") max = 50;
-
-  let slot = count < max ? start + count : "RESERVE";
-
-  await Team.create({ team, players, contact, slot, tournamentId });
-
-  try {
-    await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-      chat_id: CHAT_ID,
-      text: `
-🔥 НОВАЯ РЕГИСТРАЦИЯ
-
-🏆 Турнир: ${tournament.name}
-
-👥 Команда: ${team}
-
-📋 Игроки:
-${players}
-
-📩 Контакт:
-${contact}
-
-🎯 Слот: ${slot}
-`
-    });
-  } catch (e) {
-    console.log("TG error", e.message);
-  }
-
-  res.json({ success: true, slot });
-});
-
-/* =========================
-   📋 КОМАНДЫ
-========================= */
-app.get("/teams/:id", async (req, res) => {
-  const teams = await Team.find({ tournamentId: req.params.id }).sort({ slot: 1 });
-  res.json(teams);
-});
-
-/* =========================
-   ❌ УДАЛИТЬ КОМАНДУ
-========================= */
-app.delete("/delete/:id", checkAdmin, async (req, res) => {
-  const team = await Team.findById(req.params.id);
-  if (!team) return res.json({ success: false });
-
-  const tournamentId = team.tournamentId;
-
-  await Team.findByIdAndDelete(req.params.id);
-
-  let teams = await Team.find({ tournamentId });
-
-  for (let i = 0; i < teams.length; i++) {
-    teams[i].slot = i < 48 ? i + 3 : "RESERVE";
-    await teams[i].save();
-  }
-
-  res.json({ success: true });
-});
-
-app.listen(3000, () => {
-  console.log("🚀 Сервер запущен");
-});
+app.listen(3000,()=>console.log("SERVER OK"));

@@ -1,200 +1,55 @@
 <!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-body {
-  margin:0;
-  font-family: Arial;
-  background:#12002b;
-  color:white;
-  text-align:center;
-}
-
-/* карточки */
-.card {
-  max-width:400px;
-  margin:15px auto;
-  padding:15px;
-  background:#1a0033;
-  border-radius:15px;
-  box-shadow:0 0 10px #7b2cbf;
-}
-
-/* кнопки */
-button {
-  background:linear-gradient(45deg,#7b2cbf,#c77dff);
-  border:none;
-  padding:10px;
-  color:white;
-  border-radius:10px;
-  margin:5px;
-  cursor:pointer;
-}
-
-button:hover {
-  transform:scale(1.05);
-}
-
-/* поля */
-input {
-  width:100%;
-  padding:10px;
-  margin:5px 0;
-  border:none;
-  border-radius:8px;
-  background:#2a0044;
-  color:white;
-}
-
-/* прогресс */
-.progressBar {
-  background:#222;
-  border-radius:10px;
-  overflow:hidden;
-}
-
-#progress {
-  height:10px;
-  background:#c77dff;
-  width:0%;
-}
-</style>
-</head>
-
+<html>
 <body>
 
-<!-- кнопки -->
-<div>
-  <button onclick="location.href='/'">🏠 Главная</button>
-  <button onclick="history.back()">⬅ Назад</button>
-</div>
+<button onclick="location.href='/'">🏠</button>
 
 <h2 id="name"></h2>
-<p id="desc"></p>
 
-<!-- прогресс -->
-<div class="card">
-  <div class="progressBar">
-    <div id="progress"></div>
-  </div>
-  <p id="slots"></p>
-</div>
+<input id="team">
+<input id="nick1">
+<input id="id1">
+<input id="nick2">
+<input id="id2">
+<input id="contact">
 
-<!-- регистрация -->
-<div class="card">
+<button onclick="reg()">REGISTER</button>
 
-<h3>Регистрация</h3>
-
-<input id="team" placeholder="Название команды">
-<input id="nick1" placeholder="Игрок 1">
-<input id="id1" placeholder="ID 1">
-<input id="nick2" placeholder="Игрок 2">
-<input id="id2" placeholder="ID 2">
-<input id="contact" placeholder="Telegram">
-
-<button onclick="checkSubscribe()">🚀 Зарегистрироваться</button>
-
-<p id="status"></p>
-
-</div>
-
-<!-- команды -->
-<div class="card">
-<h3>Список команд</h3>
 <div id="teams"></div>
-</div>
 
 <script>
-const id = new URLSearchParams(location.search).get("id");
+const id=new URLSearchParams(location.search).get("id");
 
-/* турнир */
-async function loadTournament(){
-  const res = await fetch("/tournament/" + id);
-  const t = await res.json();
+async function load(){
+  const t=await fetch("/tournament/"+id).then(r=>r.json());
+  name.innerText=t.name;
 
-  document.getElementById("name").innerText = t.name;
-  document.getElementById("desc").innerText = t.description;
-}
+  const list=await fetch("/teams/"+id).then(r=>r.json());
+  teams.innerHTML="";
 
-/* команды */
-async function loadTeams(){
-  const res = await fetch("/teams/" + id);
-  const data = await res.json();
-
-  const list = document.getElementById("teams");
-  list.innerHTML = "";
-
-  data.forEach((t,i)=>{
-    let medal = "";
-    if(i===0) medal="🥇";
-    if(i===1) medal="🥈";
-    if(i===2) medal="🥉";
-
-    list.innerHTML += `
-      <div>
-        ${medal} #${t.slot} ${t.team}
-      </div>
-    `;
+  list.forEach(x=>{
+    teams.innerHTML+=`<div>${x.team}</div>`;
   });
-
-  // прогресс
-  const percent = (data.length / 48) * 100;
-  document.getElementById("progress").style.width = percent + "%";
-  document.getElementById("slots").innerText =
-    data.length + " / 48 команд";
 }
 
-/* проверка подписки */
-function checkSubscribe(){
-  if(!confirm("Подписался на Telegram канал?")){
-    window.open("https://t.me/YOUR_CHANNEL");
-    return;
-  }
+async function reg(){
+  const players=`${nick1.value} (${id1.value})`;
 
-  register();
-}
-
-/* регистрация */
-async function register(){
-  const team = document.getElementById("team").value;
-  const nick1 = document.getElementById("nick1").value;
-  const id1 = document.getElementById("id1").value;
-  const nick2 = document.getElementById("nick2").value;
-  const id2 = document.getElementById("id2").value;
-  const contact = document.getElementById("contact").value;
-
-  if(!team || !nick1 || !id1 || !nick2 || !id2 || !contact){
-    alert("Заполни всё");
-    return;
-  }
-
-  const players = `${nick1} (${id1})\n${nick2} (${id2})`;
-
-  const res = await fetch("/register",{
+  await fetch("/register",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({team,players,contact,tournamentId:id})
+    body:JSON.stringify({
+      team:team.value,
+      players,
+      contact:contact.value,
+      tournamentId:id
+    })
   });
 
-  const data = await res.json();
-
-  if(data.error){
-    status.innerText = data.error;
-    return;
-  }
-
-  status.innerText =
-    data.slot === "RESERVE" ? "Резерв" : "Слот: " + data.slot;
-
-  loadTeams();
+  load();
 }
 
-/* запуск */
-loadTournament();
-loadTeams();
+load();
 </script>
 
 </body>
