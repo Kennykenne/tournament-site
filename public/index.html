@@ -9,269 +9,157 @@
 body {
   margin: 0;
   font-family: Arial;
-  background: radial-gradient(circle at top, #12002b, #000);
+  background: radial-gradient(circle at top, #0b001a, #000);
   color: white;
 }
 
+/* баннер */
 .banner {
   text-align: center;
   padding: 80px 20px;
 }
 
 .banner h1 {
-  font-size: 40px;
+  font-size: 42px;
   color: #c77dff;
+  text-shadow: 0 0 20px #a855f7;
 }
 
+.banner p {
+  color: #aaa;
+}
+
+/* кнопки */
 .btn {
   background: linear-gradient(45deg, #7b2cbf, #c77dff);
-  padding: 10px;
+  padding: 12px 20px;
   border-radius: 10px;
   color: white;
   cursor: pointer;
   border: none;
   margin: 5px;
+  transition: 0.3s;
 }
 
+.btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #c77dff;
+}
+
+/* секции */
+.section {
+  max-width: 1000px;
+  margin: auto;
+  padding: 20px;
+}
+
+/* карточки */
 .card {
-  background: rgba(20,0,40,0.8);
+  background: rgba(20,0,40,0.9);
+  border: 1px solid #7b2cbf;
   border-radius: 15px;
   padding: 20px;
   margin: 15px;
-}
-
-.section {
-  max-width: 900px;
-  margin: auto;
-}
-
-#adminPanel {
-  position: fixed;
-  right: -320px;
-  top: 0;
-  width: 300px;
-  height: 100%;
-  background: #0b001a;
-  padding: 15px;
+  text-align: center;
   transition: 0.3s;
-  overflow:auto;
+}
+
+.card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 20px #c77dff;
 }
 </style>
 </head>
 
 <body>
 
-<!-- кнопки -->
-<div style="position:fixed; top:10px; right:10px;">
-  <button class="btn" onclick="openLogin()">🔐</button>
-  <button class="btn" onclick="toggleAdmin()">⚙️</button>
-</div>
-
 <!-- баннер -->
 <div class="banner">
   <h1>ORGANISATION EMOTIONS</h1>
   <p>Киберспортивные турниры по PUBG</p>
 
-  <button class="btn" onclick="showTab('tournaments')">🎮 Турниры</button>
+  <button class="btn" onclick="scrollToSection('tournaments')">
+    🎮 Смотреть турниры
+  </button>
+
+  <button class="btn" onclick="window.open('https://t.me/YOUR_CHANNEL')">
+    📩 Telegram
+  </button>
 </div>
 
-<!-- вкладки -->
-<div style="text-align:center;">
-  <button onclick="showTab('home')">🏠 Главная</button>
-  <button onclick="showTab('tournaments')">🎮 Турниры</button>
-</div>
-
-<div id="homeTab" class="section">
+<!-- о нас -->
+<div class="section">
   <div class="card">
-    <h2>О нас</h2>
-    <p>Мы проводим турниры по PUBG с призами</p>
+    <h2>🏠 О нас</h2>
+    <p>
+      Мы проводим киберспортивные турниры по PUBG.  
+      Участвуй, побеждай и попади в историю!
+    </p>
   </div>
 </div>
 
-<div id="tournamentsTab" class="section" style="display:none;">
-  <div id="tournaments"></div>
+<!-- турниры -->
+<div id="tournaments" class="section">
+  <h2>🎮 Активные турниры</h2>
+  <div id="tournamentsList"></div>
 </div>
 
-<!-- login -->
-<div id="loginModal" style="display:none; position:fixed; width:100%; height:100%; background:#000a;">
-  <div style="background:#111; padding:20px; max-width:300px; margin:100px auto;">
-    <input id="adminPass">
-    <button onclick="login()">Войти</button>
-  </div>
-</div>
-
-<!-- админ -->
-<div id="adminPanel">
-
-<h3>Админка</h3>
-
-<input id="t_name" placeholder="Название">
-<input id="t_desc" placeholder="Описание">
-<input id="t_mode" placeholder="Режим">
-<input id="t_slots" placeholder="Слоты">
-
-<input type="file" id="imageFile">
-<img id="preview" style="width:100%; display:none;">
-
-<button onclick="createTournament()">Создать</button>
-
-<hr>
-
-<div id="adminList"></div>
-<div id="adminTeams"></div>
-
+<!-- история -->
+<div class="section">
+  <h2>🏆 История турниров</h2>
+  <div id="history"></div>
 </div>
 
 <script>
 
-function showTab(tab){
-  document.getElementById("homeTab").style.display="none";
-  document.getElementById("tournamentsTab").style.display="none";
-
-  if(tab==="home"){
-    document.getElementById("homeTab").style.display="block";
-  } else {
-    document.getElementById("tournamentsTab").style.display="block";
-  }
+/* скролл */
+function scrollToSection(id){
+  document.getElementById(id).scrollIntoView({behavior:"smooth"});
 }
 
-function toggleAdmin(){
-  const p=document.getElementById("adminPanel");
-  p.style.right = p.style.right==="0px" ? "-320px":"0px";
-}
-
-function openLogin(){
-  document.getElementById("loginModal").style.display="block";
-}
-
-async function login(){
-  const password=document.getElementById("adminPass").value;
-
-  const res=await fetch("/api/admin-login",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    credentials:"include",
-    body:JSON.stringify({password})
-  });
-
-  const data=await res.json();
-
-  if(data.success){
-    toggleAdmin();
-    loadAdmin();
-  }
-}
-
-/* preview */
-document.getElementById("imageFile").onchange=e=>{
-  const reader=new FileReader();
-  reader.onload=()=>{
-    const img=document.getElementById("preview");
-    img.src=reader.result;
-    img.style.display="block";
-  };
-  reader.readAsDataURL(e.target.files[0]);
-};
-
-async function createTournament(){
-  const file=document.getElementById("imageFile").files[0];
-
-  if(!file){
-    alert("Выбери картинку");
-    return;
-  }
-
-  const form=new FormData();
-  form.append("image", file);
-
-  const upload=await fetch("/upload",{method:"POST",body:form});
-  const data=await upload.json();
-
-  const name=document.getElementById("t_name").value;
-  const description=document.getElementById("t_desc").value;
-  const mode=document.getElementById("t_mode").value;
-  const maxSlots=document.getElementById("t_slots").value;
-
-  await fetch("/create-tournament",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    credentials:"include",
-    body:JSON.stringify({name,description,mode,maxSlots,image:data.path})
-  });
-
-  loadTournaments();
-  loadAdmin();
-}
-
+/* турниры */
 async function loadTournaments(){
-  const res=await fetch("/tournaments");
-  const data=await res.json();
+  const res = await fetch("/tournaments");
+  const data = await res.json();
 
-  const c=document.getElementById("tournaments");
-  c.innerHTML="";
+  const c = document.getElementById("tournamentsList");
+  c.innerHTML = "";
 
   data.forEach(t=>{
-    c.innerHTML+=`
+    c.innerHTML += `
       <div class="card">
-        <img src="${t.image}" style="width:100%">
+        <img src="${t.image}" style="width:100%; border-radius:10px;">
         <h3>${t.name}</h3>
-        <button onclick="openTournament('${t._id}')">Открыть</button>
+        <p>${t.mode}</p>
+
+        <button class="btn"
+        onclick="location.href='tournament.html?id=${t._id}'">
+        🎮 Участвовать
+        </button>
       </div>
     `;
   });
 }
 
-function openTournament(id){
-  window.location.href="tournament.html?id="+id;
-}
+/* история (пока мок) */
+function loadHistory(){
+  const c = document.getElementById("history");
 
-async function loadAdmin(){
-  const res=await fetch("/tournaments");
-  const data=await res.json();
+  c.innerHTML = `
+    <div class="card">
+      🏆 PUBG DUO CUP<br>
+      👑 Победитель: Team Alpha
+    </div>
 
-  const c=document.getElementById("adminList");
-  c.innerHTML="";
-
-  data.forEach(t=>{
-    c.innerHTML+=`
-      <div class="card">
-        ${t.name}<br>
-        <button onclick="loadTeamsAdmin('${t._id}')">Команды</button>
-        <button onclick="deleteTournament('${t._id}')">❌</button>
-      </div>
-    `;
-  });
-}
-
-async function loadTeamsAdmin(id){
-  const res=await fetch("/admin/teams/"+id,{credentials:"include"});
-  const data=await res.json();
-
-  const c=document.getElementById("adminTeams");
-  c.innerHTML="";
-
-  data.forEach(t=>{
-    c.innerHTML+=`
-      <div class="card">
-        ${t.team}
-        <button onclick="deleteTeam('${t._id}','${id}')">❌</button>
-      </div>
-    `;
-  });
-}
-
-async function deleteTeam(id,tid){
-  await fetch("/delete/"+id,{method:"DELETE",credentials:"include"});
-  loadTeamsAdmin(tid);
-}
-
-async function deleteTournament(id){
-  await fetch("/delete-tournament/"+id,{method:"DELETE",credentials:"include"});
-  loadTournaments();
-  loadAdmin();
+    <div class="card">
+      🏆 TDM BATTLE<br>
+      👑 Победитель: Team Beta
+    </div>
+  `;
 }
 
 loadTournaments();
+loadHistory();
 
 </script>
 
