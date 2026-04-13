@@ -1,101 +1,29 @@
 <!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html>
+<body style="background:black;color:white">
 
-<style>
-body {
-  margin:0;
-  font-family:Arial;
-  background:#0b001a;
-  color:white;
-}
+<button onclick="openAuth()">👤</button>
 
-.banner {
-  text-align:center;
-  padding:60px;
-}
+<div id="authModal" style="display:none">
+<input id="login">
+<input id="password">
 
-.card {
-  background:#1a0033;
-  margin:15px;
-  padding:15px;
-  border-radius:15px;
-}
-
-button {
-  background:#7b2cbf;
-  border:none;
-  padding:10px;
-  color:white;
-  border-radius:10px;
-  margin:5px;
-  cursor:pointer;
-}
-
-input {
-  display:block;
-  margin:5px auto;
-  padding:10px;
-}
-</style>
-</head>
-
-<body>
-
-<!-- USER PANEL -->
-<div id="userPanel" style="position:fixed; top:10px; right:10px;">
-  <button onclick="openAuth()">👤</button>
+<button onclick="login()">Войти</button>
+<button onclick="registerUser()">Регистрация</button>
 </div>
 
-<!-- AUTH -->
-<div id="authModal" style="display:none; position:fixed; width:100%; height:100%; background:#000a;">
-  <div style="background:#111; padding:20px; max-width:300px; margin:100px auto;">
-    <input id="login" placeholder="Логин">
-    <input id="password" type="password" placeholder="Пароль">
-
-    <button onclick="login()">Войти</button>
-    <button onclick="registerUser()">Регистрация</button>
-  </div>
+<div id="adminPanel" style="display:none">
+<h3>АДМИНКА</h3>
 </div>
-
-<!-- ADMIN -->
-<div id="adminPanel" style="display:none; position:fixed; right:0; top:0; width:300px; height:100%; background:#111; padding:15px;">
-
-<h3>Админка</h3>
-
-<input id="t_name" placeholder="Название">
-<input id="t_desc" placeholder="Описание">
-<input id="t_mode" placeholder="Режим">
-<input id="t_slots" placeholder="Слоты">
-<input id="t_image" placeholder="Картинка">
-
-<button onclick="createTournament()">Создать</button>
-
-<hr>
-
-<div id="adminList"></div>
-
-</div>
-
-<!-- MAIN -->
-<div class="banner">
-  <h1>ORGANISATION EMOTIONS</h1>
-</div>
-
-<div id="tournaments"></div>
 
 <script>
 
-/* открыть окно */
 function openAuth(){
   authModal.style.display="block";
 }
 
-/* регистрация */
 async function registerUser(){
-  await fetch("/api/register",{
+  const res = await fetch("/api/register",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
@@ -104,12 +32,17 @@ async function registerUser(){
     })
   });
 
-  alert("Аккаунт создан");
+  const data = await res.json();
+
+  if(data.error){
+    alert(data.error);
+  } else {
+    alert("Аккаунт создан");
+  }
 }
 
-/* вход */
 async function login(){
-  const res=await fetch("/api/login",{
+  const res = await fetch("/api/login",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     credentials:"include",
@@ -119,107 +52,29 @@ async function login(){
     })
   });
 
-  const data=await res.json();
+  const data = await res.json();
 
-  if(data.success){
-    authModal.style.display="none";
-    loadUser();
+  if(data.error){
+    alert(data.error);
+    return;
   }
+
+  alert("Вход выполнен");
+  loadUser();
 }
 
-/* загрузка пользователя */
 async function loadUser(){
-  const res=await fetch("/api/me",{credentials:"include"});
-  const data=await res.json();
+  const res = await fetch("/api/me",{credentials:"include"});
+  const data = await res.json();
 
   if(data.user){
-    userPanel.innerHTML=`
-      👤 ${data.user.login}
-      <button onclick="logout()">🚪</button>
-    `;
-
     if(data.user.isAdmin){
       adminPanel.style.display="block";
-      loadAdmin();
     }
   }
 }
 
-/* выход */
-async function logout(){
-  await fetch("/api/logout",{method:"POST"});
-  location.reload();
-}
-
-/* турниры */
-async function loadTournaments(){
-  const res=await fetch("/tournaments");
-  const data=await res.json();
-
-  tournaments.innerHTML="";
-
-  data.forEach(t=>{
-    tournaments.innerHTML+=`
-      <div class="card">
-        <img src="${t.image}" style="width:100%">
-        <h3>${t.name}</h3>
-        <button onclick="location.href='tournament.html?id=${t._id}'">
-        Играть
-        </button>
-      </div>
-    `;
-  });
-}
-
-/* админ */
-async function loadAdmin(){
-  const res=await fetch("/tournaments");
-  const data=await res.json();
-
-  adminList.innerHTML="";
-
-  data.forEach(t=>{
-    adminList.innerHTML+=`
-      <div class="card">
-        ${t.name}
-        <button onclick="deleteTournament('${t._id}')">❌</button>
-      </div>
-    `;
-  });
-}
-
-/* создать турнир */
-async function createTournament(){
-  await fetch("/create-tournament",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    credentials:"include",
-    body:JSON.stringify({
-      name:t_name.value,
-      description:t_desc.value,
-      mode:t_mode.value,
-      maxSlots:t_slots.value,
-      image:t_image.value
-    })
-  });
-
-  loadTournaments();
-  loadAdmin();
-}
-
-/* удалить */
-async function deleteTournament(id){
-  await fetch("/delete-tournament/"+id,{
-    method:"DELETE",
-    credentials:"include"
-  });
-
-  loadTournaments();
-  loadAdmin();
-}
-
 loadUser();
-loadTournaments();
 
 </script>
 
