@@ -6,6 +6,12 @@ body {
   background:#0b001a;
   color:white;
   font-family:sans-serif;
+  margin:0;
+}
+
+h1 {
+  text-align:center;
+  margin-top:20px;
 }
 
 .card {
@@ -20,6 +26,7 @@ body {
   box-shadow:0 0 20px #c77dff;
 }
 
+/* 🔥 админка теперь не ломает сайт */
 #adminPanel {
   position:fixed;
   right:-320px;
@@ -30,13 +37,20 @@ body {
   padding:10px;
   transition:0.3s;
   overflow:auto;
+  z-index:1000;
+  box-shadow:-5px 0 15px #7b2cbf;
+}
+
+/* контент отдельно */
+#content {
+  padding:20px;
 }
 </style>
 </head>
 
 <body>
 
-<h1 style="text-align:center">ORGANISATION EMOTIONS</h1>
+<h1>ORGANISATION EMOTIONS</h1>
 
 <div style="text-align:center">
 <button onclick="window.open('https://t.me/YOUR_CHANNEL')">📩 Telegram</button>
@@ -44,17 +58,19 @@ body {
 
 <hr>
 
+<div id="content">
 <h2>🎮 Турниры</h2>
 <div id="tournaments"></div>
+</div>
 
 <!-- ADMIN -->
 <div id="adminPanel">
 
 <h3>⚙️ Админка</h3>
 
-<input id="t_name" placeholder="Название">
-<input id="t_mode" placeholder="TDM / DUO / SQUAD">
-<input id="t_image" placeholder="Картинка">
+<input id="t_name" placeholder="Название"><br>
+<input id="t_mode" placeholder="TDM / DUO / SQUAD"><br>
+<input id="t_image" placeholder="Картинка"><br>
 
 <button onclick="save()">💾 Сохранить</button>
 
@@ -69,15 +85,20 @@ body {
 
 let editId=null;
 
-/* F9 */
+/* 🔥 F9 открывает */
 document.addEventListener("keydown", e=>{
   if(e.key==="F9"){
-    adminPanel.style.right = adminPanel.style.right==="0px" ? "-320px":"0px";
+    const panel = document.getElementById("adminPanel");
+
+    panel.style.right = panel.style.right==="0px"
+      ? "-320px"
+      : "0px";
+
     loadAdmin();
   }
 });
 
-/* LOAD TOURNAMENTS */
+/* турниры */
 async function load(){
   const res = await fetch("/tournaments");
   const data = await res.json();
@@ -89,13 +110,15 @@ async function load(){
       <div class="card">
         <img src="${t.image}" width="200">
         <h3>${t.name}</h3>
-        <button onclick="location.href='tournament.html?id=${t._id}'">Играть</button>
+        <button onclick="location.href='tournament.html?id=${t._id}'">
+        Играть
+        </button>
       </div>
     `;
   });
 }
 
-/* ADMIN LIST */
+/* админ */
 async function loadAdmin(){
   const res = await fetch("/tournaments");
   const data = await res.json();
@@ -115,7 +138,7 @@ async function loadAdmin(){
   });
 }
 
-/* EDIT */
+/* редактировать */
 function edit(id,name,mode,image){
   editId=id;
   t_name.value=name;
@@ -123,7 +146,7 @@ function edit(id,name,mode,image){
   t_image.value=image;
 }
 
-/* SAVE */
+/* сохранить */
 async function save(){
   await fetch("/create-tournament",{
     method:"POST",
@@ -141,14 +164,14 @@ async function save(){
   loadAdmin();
 }
 
-/* DELETE TOURNAMENT */
+/* удалить турнир */
 async function del(id){
   await fetch("/delete-tournament/"+id,{method:"DELETE"});
   load();
   loadAdmin();
 }
 
-/* LOAD TEAMS */
+/* команды */
 async function teams(id){
   const res = await fetch("/teams/"+id);
   const data = await res.json();
@@ -165,7 +188,7 @@ async function teams(id){
   });
 }
 
-/* DELETE TEAM */
+/* удалить команду */
 async function delTeam(id,tid){
   await fetch("/delete-team/"+id,{method:"DELETE"});
   teams(tid);
