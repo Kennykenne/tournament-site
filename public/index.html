@@ -2,11 +2,7 @@
 <html>
 <head>
 <style>
-body {
-  background:#0b001a;
-  color:white;
-  font-family:sans-serif;
-}
+body {background:#0b001a;color:white;font-family:sans-serif;}
 
 .card {
   background:#1a0033;
@@ -14,10 +10,6 @@ body {
   margin:10px;
   border-radius:15px;
   box-shadow:0 0 10px #7b2cbf;
-}
-
-.card:hover {
-  box-shadow:0 0 20px #c77dff;
 }
 
 #adminPanel {
@@ -29,6 +21,7 @@ body {
   background:#111;
   padding:10px;
   transition:0.3s;
+  overflow:auto;
 }
 </style>
 </head>
@@ -46,32 +39,37 @@ body {
 <h2>🎮 Турниры</h2>
 <div id="tournaments"></div>
 
-<h2>🏆 История</h2>
-<div id="history"></div>
-
-<!-- админ -->
+<!-- ADMIN -->
 <div id="adminPanel">
 
 <h3>Админка</h3>
 
 <input id="t_name" placeholder="Название">
-<input id="t_mode" placeholder="TDM / DUO / SQUAD">
+<input id="t_mode" placeholder="Режим">
 <input id="t_image" placeholder="Картинка">
 
-<button onclick="create()">Создать</button>
+<button onclick="save()">💾 Сохранить</button>
+
+<hr>
+
+<div id="adminList"></div>
+<div id="adminTeams"></div>
 
 </div>
 
 <script>
 
-/* скрытая админка */
+let editId=null;
+
+/* F9 */
 document.addEventListener("keydown", e=>{
   if(e.key==="F9"){
     adminPanel.style.right = adminPanel.style.right==="0px" ? "-320px":"0px";
+    loadAdmin();
   }
 });
 
-/* турниры */
+/* LOAD */
 async function load(){
   const res = await fetch("/tournaments");
   const data = await res.json();
@@ -83,39 +81,89 @@ async function load(){
       <div class="card">
         <img src="${t.image}" width="200">
         <h3>${t.name}</h3>
-        <button onclick="location.href='tournament.html?id=${t._id}'">
-        Играть
-        </button>
+        <button onclick="location.href='tournament.html?id=${t._id}'">Играть</button>
       </div>
     `;
   });
 }
 
-/* история */
-function loadHistory(){
-  history.innerHTML=`
-    <div class="card">🏆 DUO CUP - Team Alpha</div>
-    <div class="card">🏆 SQUAD CUP - Team Beta</div>
-  `;
+/* ADMIN */
+async function loadAdmin(){
+  const res = await fetch("/tournaments");
+  const data = await res.json();
+
+  adminList.innerHTML="";
+
+  data.forEach(t=>{
+    adminList.innerHTML+=`
+      <div class="card">
+        ${t.name}<br>
+
+        <button onclick="edit('${t._id}','${t.name}','${t.mode}','${t.image}')">✏️</button>
+        <button onclick="del('${t._id}')">❌</button>
+        <button onclick="teams('${t._id}')">👥</button>
+      </div>
+    `;
+  });
 }
 
-/* создать турнир */
-async function create(){
+/* EDIT */
+function edit(id,name,mode,image){
+  editId=id;
+  t_name.value=name;
+  t_mode.value=mode;
+  t_image.value=image;
+}
+
+/* SAVE */
+async function save(){
   await fetch("/create-tournament",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
+      id:editId,
       name:t_name.value,
       mode:t_mode.value,
       image:t_image.value
     })
   });
 
+  editId=null;
   load();
+  loadAdmin();
+}
+
+/* DELETE */
+async function del(id){
+  await fetch("/delete-tournament/"+id,{method:"DELETE"});
+  load();
+  loadAdmin();
+}
+
+/* TEAMS */
+async function teams(id){
+  const res = await fetch("/teams/"+id);
+  const data = await res.json();
+
+  adminTeams.innerHTML="";
+
+  data.forEach(t=>{
+    adminTeams.innerHTML+=`
+      <div class="card">
+        ${t.team}
+        <button onclick="delTeam('${t._id}','${id}')">❌</button>
+      </div>
+    `;
+  });
+}
+
+/* DELETE TEAM */
+async function delTeam(id,tid){
+  await fetch("/delete-team/"+id,{method:"DELETE"});
+  teams(tid);
 }
 
 load();
-loadHistory();
 
 </script>
 

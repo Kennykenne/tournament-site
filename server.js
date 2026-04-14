@@ -29,11 +29,27 @@ const Team = mongoose.model("Team",{
   tournamentId:String
 });
 
+/* CREATE / UPDATE */
 app.post("/create-tournament", async (req,res)=>{
-  await Tournament.create(req.body);
+  const {id,name,image,mode} = req.body;
+
+  if(id){
+    await Tournament.findByIdAndUpdate(id,{name,image,mode});
+  } else {
+    await Tournament.create({name,image,mode});
+  }
+
   res.json({success:true});
 });
 
+/* DELETE TOURNAMENT */
+app.delete("/delete-tournament/:id", async (req,res)=>{
+  await Tournament.findByIdAndDelete(req.params.id);
+  await Team.deleteMany({tournamentId:req.params.id});
+  res.json({success:true});
+});
+
+/* GET */
 app.get("/tournaments", async (req,res)=>{
   res.json(await Tournament.find());
 });
@@ -42,6 +58,7 @@ app.get("/tournament/:id", async (req,res)=>{
   res.json(await Tournament.findById(req.params.id));
 });
 
+/* REGISTER */
 app.post("/register", async (req,res)=>{
   const {team,players,contact,tournamentId} = req.body;
 
@@ -65,8 +82,15 @@ app.post("/register", async (req,res)=>{
   res.json({success:true,slot});
 });
 
+/* TEAMS */
 app.get("/teams/:id", async (req,res)=>{
   res.json(await Team.find({tournamentId:req.params.id}));
+});
+
+/* DELETE TEAM */
+app.delete("/delete-team/:id", async (req,res)=>{
+  await Team.findByIdAndDelete(req.params.id);
+  res.json({success:true});
 });
 
 app.listen(3000,()=>console.log("SERVER OK"));
