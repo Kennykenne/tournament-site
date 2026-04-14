@@ -53,19 +53,33 @@ function render(){
 }
 
 async function reg(){
+  
+  if(!contact.value){
+    alert("Введите TG");
+    return;
+  }
   let players="";
 
   if(mode==="TDM"){
-    players=`${nick1.value} (${id1.value})`;
-  }
+   if(!nick1.value || !id1.value || !contact.value){
+    alert("Заполни всё");
+    return;
+   }
+ }
 
   if(mode==="DUO"){
-    players=`${nick1.value}\n${nick2.value}`;
-  }
+   if(!nick1.value || !id1.value || !nick2.value || !id2.value || !contact.value){
+    alert("Заполни всё");
+    return;
+   }
+ }
 
   if(mode==="SQUAD"){
-    players=`${nick1.value}\n${nick2.value}\n${nick3.value}\n${nick4.value}`;
-  }
+   if(!nick1.value || !nick2.value || !nick3.value || !nick4.value || !contact.value){
+    alert("Заполни всё");
+    return;
+   }
+ }
 
   await fetch("/register",{
     method:"POST",
