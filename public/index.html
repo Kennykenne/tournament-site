@@ -2,8 +2,6 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ORGANISATION EMOTIONS</title>
 
 <style>
 body {
@@ -45,6 +43,7 @@ body {
   margin: auto;
 }
 
+/* 🔐 админка скрыта */
 #adminPanel {
   position: fixed;
   right: -320px;
@@ -55,63 +54,43 @@ body {
   padding: 15px;
   transition: 0.3s;
   overflow:auto;
+  z-index:1000;
 }
 </style>
 </head>
 
 <body>
 
-<!-- кнопки -->
+<!-- кнопка входа -->
 <div style="position:fixed; top:10px; right:10px;">
   <button class="btn" onclick="openLogin()">🔐</button>
-  <button class="btn" onclick="toggleAdmin()">⚙️</button>
 </div>
 
-<!-- баннер -->
 <div class="banner">
   <h1>ORGANISATION EMOTIONS</h1>
   <p>Киберспортивные турниры по PUBG</p>
-
-  <button class="btn" onclick="showTab('tournaments')">🎮 Турниры</button>
 </div>
 
-<!-- вкладки -->
-<div style="text-align:center;">
-  <button onclick="showTab('home')">🏠 Главная</button>
-  <button onclick="showTab('tournaments')">🎮 Турниры</button>
-</div>
+<h2>🎮 Турниры</h2>
+<div id="tournaments"></div>
 
-<div id="homeTab" class="section">
-  <div class="card">
-    <h2>О нас</h2>
-    <p>Мы проводим турниры по PUBG с призами</p>
-  </div>
-</div>
-
-<div id="tournamentsTab" class="section" style="display:none;">
-  <div id="tournaments"></div>
-</div>
-
-<!-- login -->
+<!-- LOGIN -->
 <div id="loginModal" style="display:none; position:fixed; width:100%; height:100%; background:#000a;">
   <div style="background:#111; padding:20px; max-width:300px; margin:100px auto;">
-    <input id="adminPass">
+    <input id="adminPass" placeholder="Пароль">
     <button onclick="login()">Войти</button>
   </div>
 </div>
 
-<!-- админ -->
+<!-- АДМИНКА -->
 <div id="adminPanel">
 
-<h3>Админка</h3>
+<h3>⚙️ Админка</h3>
 
-<input id="t_name" placeholder="Название">
-<input id="t_desc" placeholder="Описание">
-<input id="t_mode" placeholder="Режим">
-<input id="t_slots" placeholder="Слоты">
-
-<input type="file" id="imageFile">
-<img id="preview" style="width:100%; display:none;">
+<input id="t_name" placeholder="Название"><br>
+<input id="t_desc" placeholder="Описание"><br>
+<input id="t_mode" placeholder="Режим"><br>
+<input id="t_image" placeholder="Картинка"><br>
 
 <button onclick="createTournament()">Создать</button>
 
@@ -124,134 +103,99 @@ body {
 
 <script>
 
-function showTab(tab){
-  document.getElementById("homeTab").style.display="none";
-  document.getElementById("tournamentsTab").style.display="none";
-
-  if(tab==="home"){
-    document.getElementById("homeTab").style.display="block";
-  } else {
-    document.getElementById("tournamentsTab").style.display="block";
-  }
-}
-
-function toggleAdmin(){
-  const p=document.getElementById("adminPanel");
-  p.style.right = p.style.right==="0px" ? "-320px":"0px";
-}
-
+/* открыть логин */
 function openLogin(){
-  document.getElementById("loginModal").style.display="block";
+  loginModal.style.display="block";
 }
 
-async function login(){
-  const password=document.getElementById("adminPass").value;
+/* 🔐 ЛОГИН ЧЕРЕЗ ПАРОЛЬ */
+function login(){
+  const pass = adminPass.value;
 
-  const res=await fetch("/api/admin-login",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    credentials:"include",
-    body:JSON.stringify({password})
-  });
-
-  const data=await res.json();
-
-  if(data.success){
-    toggleAdmin();
-    loadAdmin();
-  }
-}
-
-/* preview */
-document.getElementById("imageFile").onchange=e=>{
-  const reader=new FileReader();
-  reader.onload=()=>{
-    const img=document.getElementById("preview");
-    img.src=reader.result;
-    img.style.display="block";
-  };
-  reader.readAsDataURL(e.target.files[0]);
-};
-
-async function createTournament(){
-  const file=document.getElementById("imageFile").files[0];
-
-  if(!file){
-    alert("Выбери картинку");
+  if(pass !== "1234"){
+    alert("Неверный пароль");
     return;
   }
 
-  const form=new FormData();
-  form.append("image", file);
+  loginModal.style.display="none";
 
-  const upload=await fetch("/upload",{method:"POST",body:form});
-  const data=await upload.json();
+  // открываем админку
+  adminPanel.style.right="0px";
 
-  const name=document.getElementById("t_name").value;
-  const description=document.getElementById("t_desc").value;
-  const mode=document.getElementById("t_mode").value;
-  const maxSlots=document.getElementById("t_slots").value;
-
-  await fetch("/create-tournament",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    credentials:"include",
-    body:JSON.stringify({name,description,mode,maxSlots,image:data.path})
-  });
-
-  loadTournaments();
   loadAdmin();
 }
 
+/* турниры */
 async function loadTournaments(){
-  const res=await fetch("/tournaments");
-  const data=await res.json();
+  const res = await fetch("/tournaments");
+  const data = await res.json();
 
-  const c=document.getElementById("tournaments");
-  c.innerHTML="";
+  tournaments.innerHTML="";
 
   data.forEach(t=>{
-    c.innerHTML+=`
+    tournaments.innerHTML+=`
       <div class="card">
         <img src="${t.image}" style="width:100%">
         <h3>${t.name}</h3>
-        <button onclick="openTournament('${t._id}')">Открыть</button>
+        <button onclick="location.href='tournament.html?id=${t._id}'">
+        Играть
+        </button>
       </div>
     `;
   });
 }
 
-function openTournament(id){
-  window.location.href="tournament.html?id="+id;
-}
-
+/* админ список */
 async function loadAdmin(){
-  const res=await fetch("/tournaments");
-  const data=await res.json();
+  const res = await fetch("/tournaments");
+  const data = await res.json();
 
-  const c=document.getElementById("adminList");
-  c.innerHTML="";
+  adminList.innerHTML="";
 
   data.forEach(t=>{
-    c.innerHTML+=`
+    adminList.innerHTML+=`
       <div class="card">
         ${t.name}<br>
-        <button onclick="loadTeamsAdmin('${t._id}')">Команды</button>
+        <button onclick="loadTeams('${t._id}')">👥</button>
         <button onclick="deleteTournament('${t._id}')">❌</button>
       </div>
     `;
   });
 }
 
-async function loadTeamsAdmin(id){
-  const res=await fetch("/admin/teams/"+id,{credentials:"include"});
-  const data=await res.json();
+/* создать */
+async function createTournament(){
+  await fetch("/create-tournament",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      name:t_name.value,
+      description:t_desc.value,
+      mode:t_mode.value,
+      image:t_image.value
+    })
+  });
 
-  const c=document.getElementById("adminTeams");
-  c.innerHTML="";
+  loadTournaments();
+  loadAdmin();
+}
+
+/* удалить турнир */
+async function deleteTournament(id){
+  await fetch("/delete-tournament/"+id,{method:"DELETE"});
+  loadTournaments();
+  loadAdmin();
+}
+
+/* команды */
+async function loadTeams(id){
+  const res = await fetch("/teams/"+id);
+  const data = await res.json();
+
+  adminTeams.innerHTML="";
 
   data.forEach(t=>{
-    c.innerHTML+=`
+    adminTeams.innerHTML+=`
       <div class="card">
         ${t.team}
         <button onclick="deleteTeam('${t._id}','${id}')">❌</button>
@@ -260,15 +204,10 @@ async function loadTeamsAdmin(id){
   });
 }
 
+/* удалить команду */
 async function deleteTeam(id,tid){
-  await fetch("/delete/"+id,{method:"DELETE",credentials:"include"});
-  loadTeamsAdmin(tid);
-}
-
-async function deleteTournament(id){
-  await fetch("/delete-tournament/"+id,{method:"DELETE",credentials:"include"});
-  loadTournaments();
-  loadAdmin();
+  await fetch("/delete-team/"+id,{method:"DELETE"});
+  loadTeams(tid);
 }
 
 loadTournaments();
