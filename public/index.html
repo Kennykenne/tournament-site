@@ -10,7 +10,6 @@ body {
   text-align:center;
 }
 
-/* баннер */
 .banner {
   padding:80px 20px;
 }
@@ -21,27 +20,15 @@ body {
   text-shadow:0 0 20px #a855f7;
 }
 
-.banner p {
-  color:#aaa;
-}
-
-/* кнопка */
 .btn {
   background:linear-gradient(45deg,#7b2cbf,#c77dff);
   border:none;
-  padding:12px 20px;
+  padding:12px;
   color:white;
   border-radius:10px;
-  cursor:pointer;
   margin:5px;
-  box-shadow:0 0 15px #c77dff;
 }
 
-.btn:hover {
-  transform:scale(1.05);
-}
-
-/* карточки */
 .card {
   max-width:600px;
   margin:20px auto;
@@ -51,7 +38,6 @@ body {
   box-shadow:0 0 20px #7b2cbf;
 }
 
-/* админка */
 #adminPanel {
   position:fixed;
   right:-320px;
@@ -62,39 +48,36 @@ body {
   padding:15px;
   transition:0.3s;
   overflow:auto;
-  z-index:1000;
-  box-shadow:-5px 0 20px #7b2cbf;
 }
 </style>
 </head>
 
 <body>
 
-<!-- баннер -->
 <div class="banner">
   <h1>ORGANISATION EMOTIONS</h1>
-  <p>Киберспортивные турниры по PUBG</p>
-
-  <button class="btn" onclick="window.open('https://t.me/YOUR_CHANNEL')">
-    📩 Telegram
-  </button>
 </div>
-
-<hr>
 
 <h2>🎮 Турниры</h2>
 <div id="tournaments"></div>
 
-<!-- админка -->
 <div id="adminPanel">
 
 <h3>⚙️ Админка</h3>
 
 <input id="t_name" placeholder="Название"><br>
-<input id="t_mode" placeholder="TDM / DUO / SQUAD"><br>
+
+<textarea id="t_desc" placeholder="Описание"></textarea>
+
+<select id="t_mode">
+<option value="TDM">TDM</option>
+<option value="DUO">DUO</option>
+<option value="SQUAD">SQUAD</option>
+</select>
+
 <input id="t_image" placeholder="Картинка"><br>
 
-<button class="btn" onclick="save()">💾 Сохранить</button>
+<button onclick="save()">💾 Сохранить</button>
 
 <hr>
 
@@ -107,20 +90,14 @@ body {
 
 let editId=null;
 
-/* 🔥 F9 */
 document.addEventListener("keydown", e=>{
   if(e.key==="F9"){
-    const panel = document.getElementById("adminPanel");
-
-    panel.style.right = panel.style.right==="0px"
-      ? "-320px"
-      : "0px";
-
+    adminPanel.style.right =
+      adminPanel.style.right==="0px" ? "-320px":"0px";
     loadAdmin();
   }
 });
 
-/* турниры */
 async function load(){
   const res = await fetch("/tournaments");
   const data = await res.json();
@@ -130,17 +107,17 @@ async function load(){
   data.forEach(t=>{
     tournaments.innerHTML+=`
       <div class="card">
-        <img src="${t.image}" style="width:100%; border-radius:10px;">
+        <img src="${t.image}" width="200">
         <h3>${t.name}</h3>
-        <button class="btn" onclick="location.href='tournament.html?id=${t._id}'">
-          Играть
+        <p>${t.description || ""}</p>
+        <button onclick="location.href='tournament.html?id=${t._id}'">
+        Играть
         </button>
       </div>
     `;
   });
 }
 
-/* админ список */
 async function loadAdmin(){
   const res = await fetch("/tournaments");
   const data = await res.json();
@@ -151,8 +128,9 @@ async function loadAdmin(){
     adminList.innerHTML+=`
       <div class="card">
         ${t.name}<br>
+        <small>${t.mode}</small>
 
-        <button onclick="edit('${t._id}','${t.name}','${t.mode}','${t.image}')">✏️</button>
+        <button onclick="edit('${t._id}','${t.name}','${t.mode}','${t.image}','${t.description}')">✏️</button>
         <button onclick="del('${t._id}')">❌</button>
         <button onclick="teams('${t._id}')">👥</button>
       </div>
@@ -160,15 +138,14 @@ async function loadAdmin(){
   });
 }
 
-/* редактировать */
-function edit(id,name,mode,image){
+function edit(id,name,mode,image,desc){
   editId=id;
   t_name.value=name;
   t_mode.value=mode;
   t_image.value=image;
+  t_desc.value=desc || "";
 }
 
-/* сохранить */
 async function save(){
   await fetch("/create-tournament",{
     method:"POST",
@@ -177,7 +154,8 @@ async function save(){
       id:editId,
       name:t_name.value,
       mode:t_mode.value,
-      image:t_image.value
+      image:t_image.value,
+      description:t_desc.value
     })
   });
 
@@ -186,14 +164,12 @@ async function save(){
   loadAdmin();
 }
 
-/* удалить турнир */
 async function del(id){
   await fetch("/delete-tournament/"+id,{method:"DELETE"});
   load();
   loadAdmin();
 }
 
-/* команды */
 async function teams(id){
   const res = await fetch("/teams/"+id);
   const data = await res.json();
@@ -210,7 +186,6 @@ async function teams(id){
   });
 }
 
-/* удалить команду */
 async function delTeam(id,tid){
   await fetch("/delete-team/"+id,{method:"DELETE"});
   teams(tid);
@@ -219,6 +194,5 @@ async function delTeam(id,tid){
 load();
 
 </script>
-
 </body>
 </html>

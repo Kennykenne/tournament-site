@@ -18,7 +18,8 @@ app.use(express.static("public"));
 const Tournament = mongoose.model("Tournament",{
   name:String,
   image:String,
-  mode:String
+  mode:String,
+  description:String   // 🔥 ДОБАВИЛ
 });
 
 const Team = mongoose.model("Team",{
@@ -31,18 +32,18 @@ const Team = mongoose.model("Team",{
 
 /* CREATE / UPDATE */
 app.post("/create-tournament", async (req,res)=>{
-  const {id,name,image,mode} = req.body;
+  const {id,name,image,mode,description} = req.body;
 
   if(id){
-    await Tournament.findByIdAndUpdate(id,{name,image,mode});
+    await Tournament.findByIdAndUpdate(id,{name,image,mode,description});
   } else {
-    await Tournament.create({name,image,mode});
+    await Tournament.create({name,image,mode,description});
   }
 
   res.json({success:true});
 });
 
-/* DELETE TOURNAMENT */
+/* DELETE */
 app.delete("/delete-tournament/:id", async (req,res)=>{
   await Tournament.findByIdAndDelete(req.params.id);
   await Team.deleteMany({tournamentId:req.params.id});
@@ -76,7 +77,17 @@ app.post("/register", async (req,res)=>{
 
   await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`,{
     chat_id:CHAT_ID,
-    text:`🔥 ${team}\n🎯 ${slot}`
+    text:`
+🔥 НОВАЯ РЕГИСТРАЦИЯ
+
+🏆 ${tournament.name}
+🎮 ${tournament.mode}
+
+👥 ${players}
+
+📩 ${contact}
+🎯 ${slot}
+`
   });
 
   res.json({success:true,slot});
