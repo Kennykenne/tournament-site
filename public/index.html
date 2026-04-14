@@ -1,134 +1,83 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-<meta charset="UTF-8">
-
 <style>
 body {
-  margin:0;
-  font-family:Arial;
-  background: radial-gradient(circle at top, #14002a, #000);
+  background:#0b001a;
   color:white;
-  text-align:center;
+  font-family:sans-serif;
 }
 
-/* баннер */
-.banner {
-  padding:80px 20px;
-}
-
-.banner h1 {
-  font-size:40px;
-  color:#c77dff;
-  text-shadow:0 0 20px #a855f7;
-}
-
-.banner p {
-  color:#aaa;
-}
-
-/* кнопки */
-.mainBtn {
-  background:linear-gradient(45deg,#7b2cbf,#c77dff);
-  border:none;
-  padding:12px 25px;
-  color:white;
-  border-radius:12px;
-  margin:5px;
-  cursor:pointer;
-  box-shadow:0 0 15px #c77dff;
-  transition:0.3s;
-}
-
-.mainBtn:hover {
-  transform:scale(1.05);
-  box-shadow:0 0 25px #c77dff;
-}
-
-/* вкладки */
-.tabs {
-  margin-top:20px;
-}
-
-/* карточка */
 .card {
-  max-width:600px;
-  margin:20px auto;
-  padding:20px;
-  background:rgba(30,0,60,0.8);
+  background:#1a0033;
+  padding:15px;
+  margin:10px;
   border-radius:15px;
-  box-shadow:0 0 20px #7b2cbf;
+  box-shadow:0 0 10px #7b2cbf;
 }
 
-/* админ кнопка */
-.topBtns {
+.card:hover {
+  box-shadow:0 0 20px #c77dff;
+}
+
+#adminPanel {
   position:fixed;
-  right:20px;
-  top:20px;
+  right:-320px;
+  top:0;
+  width:300px;
+  height:100%;
+  background:#111;
+  padding:10px;
+  transition:0.3s;
+  overflow:auto;
 }
 </style>
 </head>
 
 <body>
 
-<div class="topBtns">
-  <button onclick="toggleAdmin()">⚙️</button>
+<h1 style="text-align:center">ORGANISATION EMOTIONS</h1>
+
+<div style="text-align:center">
+<button onclick="window.open('https://t.me/YOUR_CHANNEL')">📩 Telegram</button>
 </div>
 
-<div class="banner">
-  <h1>ORGANISATION EMOTIONS</h1>
-  <p>Киберспортивные турниры по PUBG</p>
-</div>
+<hr>
 
-<!-- КНОПКИ -->
-<div class="tabs">
+<h2>🎮 Турниры</h2>
+<div id="tournaments"></div>
 
-  <button class="mainBtn" onclick="showTab('home')">
-    🏠 Главная
-  </button>
+<!-- ADMIN -->
+<div id="adminPanel">
 
-  <button class="mainBtn" onclick="showTab('tournaments')">
-    🎮 Турниры
-  </button>
+<h3>⚙️ Админка</h3>
 
-  <button class="mainBtn" onclick="window.open('https://t.me/YOUR_CHANNEL')">
-    📩 Telegram
-  </button>
+<input id="t_name" placeholder="Название">
+<input id="t_mode" placeholder="TDM / DUO / SQUAD">
+<input id="t_image" placeholder="Картинка">
 
-</div>
+<button onclick="save()">💾 Сохранить</button>
 
-<!-- О НАС -->
-<div id="homeTab">
-  <div class="card">
-    <h2>О нас</h2>
-    <p>Мы проводим турниры по PUBG с призами</p>
-  </div>
-</div>
+<hr>
 
-<!-- ТУРНИРЫ -->
-<div id="tournamentsTab" style="display:none;">
-  <div id="tournaments"></div>
+<div id="adminList"></div>
+<div id="adminTeams"></div>
+
 </div>
 
 <script>
 
-/* вкладки */
-function showTab(tab){
-  homeTab.style.display="none";
-  tournamentsTab.style.display="none";
+let editId=null;
 
-  if(tab==="home") homeTab.style.display="block";
-  if(tab==="tournaments") tournamentsTab.style.display="block";
-}
-
-/* админка F9 */
+/* F9 */
 document.addEventListener("keydown", e=>{
   if(e.key==="F9"){
-    alert("Админка открыта 😎");
+    adminPanel.style.right = adminPanel.style.right==="0px" ? "-320px":"0px";
+    loadAdmin();
   }
 });
 
-/* турниры */
+/* LOAD TOURNAMENTS */
 async function load(){
   const res = await fetch("/tournaments");
   const data = await res.json();
@@ -138,14 +87,88 @@ async function load(){
   data.forEach(t=>{
     tournaments.innerHTML+=`
       <div class="card">
-        <img src="${t.image}" style="width:100%; border-radius:10px;">
+        <img src="${t.image}" width="200">
         <h3>${t.name}</h3>
-        <button class="mainBtn" onclick="location.href='tournament.html?id=${t._id}'">
-          Играть
-        </button>
+        <button onclick="location.href='tournament.html?id=${t._id}'">Играть</button>
       </div>
     `;
   });
+}
+
+/* ADMIN LIST */
+async function loadAdmin(){
+  const res = await fetch("/tournaments");
+  const data = await res.json();
+
+  adminList.innerHTML="";
+
+  data.forEach(t=>{
+    adminList.innerHTML+=`
+      <div class="card">
+        ${t.name}<br>
+
+        <button onclick="edit('${t._id}','${t.name}','${t.mode}','${t.image}')">✏️</button>
+        <button onclick="del('${t._id}')">❌</button>
+        <button onclick="teams('${t._id}')">👥</button>
+      </div>
+    `;
+  });
+}
+
+/* EDIT */
+function edit(id,name,mode,image){
+  editId=id;
+  t_name.value=name;
+  t_mode.value=mode;
+  t_image.value=image;
+}
+
+/* SAVE */
+async function save(){
+  await fetch("/create-tournament",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      id:editId,
+      name:t_name.value,
+      mode:t_mode.value,
+      image:t_image.value
+    })
+  });
+
+  editId=null;
+  load();
+  loadAdmin();
+}
+
+/* DELETE TOURNAMENT */
+async function del(id){
+  await fetch("/delete-tournament/"+id,{method:"DELETE"});
+  load();
+  loadAdmin();
+}
+
+/* LOAD TEAMS */
+async function teams(id){
+  const res = await fetch("/teams/"+id);
+  const data = await res.json();
+
+  adminTeams.innerHTML="";
+
+  data.forEach(t=>{
+    adminTeams.innerHTML+=`
+      <div class="card">
+        ${t.team}
+        <button onclick="delTeam('${t._id}','${id}')">❌</button>
+      </div>
+    `;
+  });
+}
+
+/* DELETE TEAM */
+async function delTeam(id,tid){
+  await fetch("/delete-team/"+id,{method:"DELETE"});
+  teams(tid);
 }
 
 load();
