@@ -1,90 +1,70 @@
 <!DOCTYPE html>
 <html>
-<body style="background:#12002b;color:white;font-family:sans-serif">
+<body style="background:#12002b;color:white">
 
 <button onclick="location.href='/'">🏠</button>
 <button onclick="history.back()">⬅</button>
 
 <h2 id="name"></h2>
-<p id="mode"></p>
 
 <div id="form"></div>
-
 <button onclick="reg()">Регистрация</button>
 
 <div id="teams"></div>
 
 <script>
 const id=new URLSearchParams(location.search).get("id");
-
-let currentMode="";
+let mode="";
 
 async function load(){
   const t=await fetch("/tournament/"+id).then(r=>r.json());
   name.innerText=t.name;
-  mode.innerText=t.mode;
-  currentMode=t.mode;
+  mode=t.mode;
 
-  renderForm();
+  render();
 
   const list=await fetch("/teams/"+id).then(r=>r.json());
   teams.innerHTML="";
 
   list.forEach((x,i)=>{
-    let medal = i==0?"🥇":i==1?"🥈":i==2?"🥉":"";
+    let medal=i==0?"🥇":i==1?"🥈":i==2?"🥉":"";
     teams.innerHTML+=`<div>${medal} ${x.team}</div>`;
   });
 }
 
-function renderForm(){
-  if(currentMode==="TDM"){
-    form.innerHTML=`
-      <input id="nick1" placeholder="Ник">
-      <input id="id1" placeholder="ID">
-      <input id="contact" placeholder="TG">
-    `;
+function render(){
+  if(mode==="TDM"){
+    form.innerHTML=`<input id="nick1"><input id="id1"><input id="contact">`;
   }
 
-  if(currentMode==="DUO"){
-    form.innerHTML=`
-      <input id="nick1"><input id="id1">
-      <input id="nick2"><input id="id2">
-      <input id="contact">
-    `;
+  if(mode==="DUO"){
+    form.innerHTML=`<input id="nick1"><input id="id1">
+    <input id="nick2"><input id="id2">
+    <input id="contact">`;
   }
 
-  if(currentMode==="SQUAD"){
-    form.innerHTML=`
-      <input id="nick1"><input id="id1">
-      <input id="nick2"><input id="id2">
-      <input id="nick3"><input id="id3">
-      <input id="nick4"><input id="id4">
-      <input id="contact">
-    `;
+  if(mode==="SQUAD"){
+    form.innerHTML=`<input id="nick1"><input id="id1">
+    <input id="nick2"><input id="id2">
+    <input id="nick3"><input id="id3">
+    <input id="nick4"><input id="id4">
+    <input id="contact">`;
   }
 }
 
 async function reg(){
   let players="";
 
-  if(currentMode==="TDM"){
+  if(mode==="TDM"){
     players=`${nick1.value} (${id1.value})`;
   }
 
-  if(currentMode==="DUO"){
-    players=`
-${nick1.value} (${id1.value})
-${nick2.value} (${id2.value})
-`;
+  if(mode==="DUO"){
+    players=`${nick1.value}\n${nick2.value}`;
   }
 
-  if(currentMode==="SQUAD"){
-    players=`
-${nick1.value} (${id1.value})
-${nick2.value} (${id2.value})
-${nick3.value} (${id3.value})
-${nick4.value} (${id4.value})
-`;
+  if(mode==="SQUAD"){
+    players=`${nick1.value}\n${nick2.value}\n${nick3.value}\n${nick4.value}`;
   }
 
   await fetch("/register",{
@@ -103,6 +83,5 @@ ${nick4.value} (${id4.value})
 
 load();
 </script>
-
 </body>
 </html>

@@ -15,16 +15,12 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static("public"));
 
-/* TOURNAMENT */
 const Tournament = mongoose.model("Tournament",{
   name:String,
-  description:String,
   image:String,
-  mode:String,
-  maxSlots:Number
+  mode:String
 });
 
-/* TEAM */
 const Team = mongoose.model("Team",{
   team:String,
   players:String,
@@ -33,13 +29,11 @@ const Team = mongoose.model("Team",{
   tournamentId:String
 });
 
-/* CREATE */
 app.post("/create-tournament", async (req,res)=>{
   await Tournament.create(req.body);
   res.json({success:true});
 });
 
-/* GET */
 app.get("/tournaments", async (req,res)=>{
   res.json(await Tournament.find());
 });
@@ -48,12 +42,10 @@ app.get("/tournament/:id", async (req,res)=>{
   res.json(await Tournament.findById(req.params.id));
 });
 
-/* REGISTER */
 app.post("/register", async (req,res)=>{
   const {team,players,contact,tournamentId} = req.body;
 
   const tournament = await Tournament.findById(tournamentId);
-
   const count = await Team.countDocuments({tournamentId});
 
   let max = 48;
@@ -67,24 +59,12 @@ app.post("/register", async (req,res)=>{
 
   await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`,{
     chat_id:CHAT_ID,
-    text:`
-🔥 НОВАЯ РЕГИСТРАЦИЯ
-
-🏆 Турнир: ${tournament.name}
-🎮 Режим: ${tournament.mode}
-
-👥 ${players}
-
-📩 ${contact}
-
-🎯 Слот: ${slot}
-`
+    text:`🔥 ${team}\n🎯 ${slot}`
   });
 
   res.json({success:true,slot});
 });
 
-/* TEAMS */
 app.get("/teams/:id", async (req,res)=>{
   res.json(await Team.find({tournamentId:req.params.id}));
 });
