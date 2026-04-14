@@ -27,20 +27,22 @@ body {
   color:#aaa;
 }
 
-/* кнопка */
-.btn {
+/* кнопки */
+.mainBtn {
   background:linear-gradient(45deg,#7b2cbf,#c77dff);
   border:none;
-  padding:12px 20px;
+  padding:12px 25px;
   color:white;
-  border-radius:10px;
+  border-radius:12px;
+  margin:5px;
   cursor:pointer;
-  margin-top:10px;
   box-shadow:0 0 15px #c77dff;
+  transition:0.3s;
 }
 
-.btn:hover {
+.mainBtn:hover {
   transform:scale(1.05);
+  box-shadow:0 0 25px #c77dff;
 }
 
 /* вкладки */
@@ -58,13 +60,12 @@ body {
   box-shadow:0 0 20px #7b2cbf;
 }
 
-/* админ кнопки */
+/* админ кнопка */
 .topBtns {
   position:fixed;
   right:20px;
   top:20px;
 }
-
 </style>
 </head>
 
@@ -77,13 +78,23 @@ body {
 <div class="banner">
   <h1>ORGANISATION EMOTIONS</h1>
   <p>Киберспортивные турниры по PUBG</p>
-
-  <button class="btn" onclick="scrollToTournaments()">🎮 Турниры</button>
 </div>
 
+<!-- КНОПКИ -->
 <div class="tabs">
-  <button onclick="showTab('home')">🏠 Главная</button>
-  <button onclick="showTab('tournaments')">🎮 Турниры</button>
+
+  <button class="mainBtn" onclick="showTab('home')">
+    🏠 Главная
+  </button>
+
+  <button class="mainBtn" onclick="showTab('tournaments')">
+    🎮 Турниры
+  </button>
+
+  <button class="mainBtn" onclick="window.open('https://t.me/YOUR_CHANNEL')">
+    📩 Telegram
+  </button>
+
 </div>
 
 <!-- О НАС -->
@@ -110,12 +121,6 @@ function showTab(tab){
   if(tab==="tournaments") tournamentsTab.style.display="block";
 }
 
-/* скролл */
-function scrollToTournaments(){
-  showTab("tournaments");
-  window.scrollTo({top:400,behavior:"smooth"});
-}
-
 /* админка F9 */
 document.addEventListener("keydown", e=>{
   if(e.key==="F9"){
@@ -135,7 +140,7 @@ async function load(){
       <div class="card">
         <img src="${t.image}" style="width:100%; border-radius:10px;">
         <h3>${t.name}</h3>
-        <button class="btn" onclick="location.href='tournament.html?id=${t._id}'">
+        <button class="mainBtn" onclick="location.href='tournament.html?id=${t._id}'">
           Играть
         </button>
       </div>

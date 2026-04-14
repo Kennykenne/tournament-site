@@ -3,8 +3,8 @@ const axios = require("axios");
 const cors = require("cors");
 const mongoose = require("mongoose");
 
-const TOKEN = "ТВОЙ_ТОКЕН";
-const CHAT_ID = "ТВОЙ_CHAT_ID";
+const TOKEN = "8736212653:AAGQVrBHFDKL5FrnlSgq2JCIPo72zGjwgBI";
+const CHAT_ID = "6113649669";
 
 mongoose.connect("mongodb+srv://kenny:123456123@cluster0.pak425i.mongodb.net/tournament")
 .then(()=>console.log("DB OK"));
